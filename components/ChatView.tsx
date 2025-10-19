@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { JLPTLevel, ChatMessage } from '../types';
@@ -305,7 +306,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
         {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-700 text-dark-text-secondary rounded-bl-none italic">{currentOutput}</div></div>}
-        {currentInput && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic">{currentInput}<MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
+        {currentInput && !isFirstTurnRef.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic">{currentInput}<MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
       </div>
       <div className="p-4 border-t border-gray-700">
         <button

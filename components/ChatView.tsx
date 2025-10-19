@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { JLPTLevel, ChatMessage } from '../types';
-import { createBlob, decode, decodeAudioData } from '../utils/audio';
+import { createBlob, decode, decodeAudioData, encode } from '../utils/audio';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
 
 enum ConnectionState {
@@ -23,7 +23,7 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
   const [currentInput, setCurrentInput] = useState('');
   const [currentOutput, setCurrentOutput] = useState('');
   
-  const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+  const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -33,6 +33,7 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const currentInputRef = useRef('');
   const currentOutputRef = useRef('');
+  const isFirstTurnRef = useRef(true);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -45,7 +46,7 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
     return `You are a friendly and patient Japanese teacher, 日本語の先生.
 Your student's level is JLPT ${level}.
 Your goal is to help the student become fluent in spoken Japanese through conversation.
-1. Start the conversation by greeting the student and asking a simple question appropriate for the ${level} level.
+1. The student will start the conversation by saying "こんにちは". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
 2. Maintain the conversation using vocabulary, grammar, and topics suitable for the ${level} level.
 3. Speak clearly and at a natural, but not overly fast, pace.
 4. If the student makes a significant grammatical error, gently provide a correction after they have finished speaking.
@@ -57,6 +58,23 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
+      // Generate audio for "こんにちは" to kickstart the conversation
+      const ttsResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: 'こんにちは' }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              // Use a neutral, standard voice for the initial greeting
+              prebuiltVoiceConfig: { voiceName: 'Puck' }, 
+            },
+          },
+        },
+      });
+      const base64Audio24k = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
@@ -66,8 +84,51 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks: {
-          onopen: () => {
+          onopen: async () => {
             setConnectionState(ConnectionState.CONNECTED);
+
+            // Resample the TTS audio from 24kHz to 16kHz and send it to the live session
+            if (base64Audio24k && outputAudioContextRef.current) {
+              try {
+                // 1. Decode 24kHz TTS audio
+                const audioData24k = decode(base64Audio24k);
+                const audioBuffer24k = await decodeAudioData(audioData24k, outputAudioContextRef.current, 24000, 1);
+                
+                // 2. Resample to 16kHz
+                const targetSampleRate = 16000;
+                const offlineContext = new OfflineAudioContext(
+                    audioBuffer24k.numberOfChannels,
+                    audioBuffer24k.duration * targetSampleRate,
+                    targetSampleRate
+                );
+                const bufferSource = offlineContext.createBufferSource();
+                bufferSource.buffer = audioBuffer24k;
+                bufferSource.connect(offlineContext.destination);
+                bufferSource.start();
+                const resampledBuffer16k = await offlineContext.startRendering();
+
+                // 3. Convert resampled AudioBuffer to Int16 PCM data
+                const pcmData = resampledBuffer16k.getChannelData(0);
+                const l = pcmData.length;
+                const int16 = new Int16Array(l);
+                for (let i = 0; i < l; i++) {
+                    const s = Math.max(-1, Math.min(1, pcmData[i]));
+                    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                
+                // 4. Create blob and send to live session
+                const pcmBlob = {
+                    data: encode(new Uint8Array(int16.buffer)),
+                    mimeType: 'audio/pcm;rate=16000',
+                };
+                sessionPromiseRef.current?.then((session) => {
+                    session.sendRealtimeInput({ media: pcmBlob });
+                });
+              } catch (e) {
+                  console.error("Failed to process trigger audio:", e);
+              }
+            }
+
             const source = inputAudioContextRef.current!.createMediaStreamSource(stream);
             const scriptProcessor = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
             scriptProcessorRef.current = scriptProcessor;
@@ -97,16 +158,30 @@ Your goal is to help the student become fluent in spoken Japanese through conver
                 const finalInput = currentInputRef.current.trim();
                 const finalOutput = currentOutputRef.current.trim();
 
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    if (finalInput) {
-                        newMessages.push({ id: `user-${Date.now()}`, sender: 'user', text: finalInput });
-                    }
-                    if (finalOutput) {
-                        newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
-                    }
-                    return newMessages;
-                });
+                if (isFirstTurnRef.current) {
+                    // This is the first turn. The input is the automatic greeting.
+                    // We only want to show the AI's response to start the conversation.
+                    setMessages(prev => {
+                        const newMessages = [...prev];
+                        if (finalOutput) {
+                            newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                        }
+                        return newMessages;
+                    });
+                    isFirstTurnRef.current = false; // The first turn is now complete
+                } else {
+                    // Subsequent turns should show both user and AI messages.
+                    setMessages(prev => {
+                        const newMessages = [...prev];
+                        if (finalInput) {
+                            newMessages.push({ id: `user-${Date.now()}`, sender: 'user', text: finalInput });
+                        }
+                        if (finalOutput) {
+                            newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                        }
+                        return newMessages;
+                    });
+                }
                 
                 currentInputRef.current = '';
                 currentOutputRef.current = '';
@@ -137,7 +212,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
                 nextStartTime.current = 0;
             }
           },
-          onerror: (e: Error) => {
+          onerror: (e: ErrorEvent) => {
             console.error('Session error:', e);
             setConnectionState(ConnectionState.ERROR);
           },

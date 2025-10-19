@@ -1,4 +1,3 @@
-
 import { Blob } from '@google/genai';
 
 export function encode(bytes: Uint8Array): string {

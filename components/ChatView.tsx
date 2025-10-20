@@ -8,9 +8,8 @@ import { EyeOffIcon } from './icons/EyeOffIcon';
 import { 
     TTS_MODEL, 
     LIVE_SESSION_MODEL, 
-    INITIAL_GREETING_VOICE, 
-    TEACHER_VOICE, 
-    TRIGGER_WORD, 
+    INITIAL_INSTRUCTION_VOICE, 
+    TEACHER_VOICE,
     OUTPUT_SAMPLE_RATE
 } from '../constants';
 
@@ -25,14 +24,16 @@ enum ConnectionState {
 interface ChatViewProps {
   jlptLevel: JLPTLevel;
   onEndChat: () => void;
+  initialInstruction: string;
+  defaultBlur: boolean;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
+const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat, initialInstruction, defaultBlur }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.IDLE);
   const [currentInput, setCurrentInput] = useState('');
   const [currentOutput, setCurrentOutput] = useState('');
-  const [isBlurred, setIsBlurred] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(defaultBlur);
   
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -50,11 +51,11 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
     }
   }, [messages, currentInput, currentOutput]);
 
-  const getSystemInstruction = (level: JLPTLevel): string => {
+  const getSystemInstruction = (level: JLPTLevel, triggerWord: string): string => {
     return `You are a friendly and patient Japanese teacher, 日本語の先生.
 Your student's level is JLPT ${level}.
 Your goal is to help the student become fluent in spoken Japanese through conversation.
-1. The student will start the conversation by saying "${TRIGGER_WORD}". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
+1. The student will start the conversation by saying "${triggerWord}". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
 2. Maintain the conversation using vocabulary, grammar, and topics suitable for the ${level} level.
 3. Speak clearly and at a natural, but not overly fast, pace.
 4. If the student makes a significant grammatical error, gently provide a correction after they have finished speaking.
@@ -69,12 +70,12 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       // Generate audio for trigger word to kickstart the conversation
       const ttsResponse = await ai.models.generateContent({
         model: TTS_MODEL,
-        contents: [{ parts: [{ text: TRIGGER_WORD }] }],
+        contents: [{ parts: [{ text: initialInstruction }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: INITIAL_GREETING_VOICE }, 
+              prebuiltVoiceConfig: { voiceName: INITIAL_INSTRUCTION_VOICE }, 
             },
           },
         },
@@ -184,7 +185,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TEACHER_VOICE } } },
-          systemInstruction: getSystemInstruction(jlptLevel),
+          systemInstruction: getSystemInstruction(jlptLevel, initialInstruction),
           proactivity: { proactiveAudio: true },
         },
       });
@@ -194,7 +195,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       console.error('Failed to start session:', err);
       setConnectionState(ConnectionState.ERROR);
     }
-  }, [jlptLevel]);
+  }, [jlptLevel, initialInstruction]);
 
   const cleanup = useCallback(() => {
     sessionPromiseRef.current?.then(session => session.close());
@@ -230,7 +231,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
   
   const renderMessage = (msg: ChatMessage) => (
     <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-gray-700 text-dark-text rounded-bl-none'}`}>
+      <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-gray-100 text-light-text dark:bg-gray-700 dark:text-dark-text rounded-bl-none'}`}>
         <p className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{msg.text}</p>
       </div>
     </div>
@@ -253,11 +254,11 @@ Your goal is to help the student become fluent in spoken Japanese through conver
 
 
   return (
-    <div className="flex flex-col h-full bg-dark-surface">
-        <div className="p-3 border-b border-gray-700 flex justify-between items-center">
+    <div className="flex flex-col h-full bg-light-surface dark:bg-dark-surface">
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <span className="font-semibold text-lg">{jlptLevel} Level</span>
             <div className="flex items-center gap-4">
-                <button onClick={toggleBlur} className="text-dark-text-secondary hover:text-white transition-colors" aria-label={isBlurred ? "Show text" : "Blur text"}>
+                <button onClick={toggleBlur} className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-white transition-colors" aria-label={isBlurred ? "Show text" : "Blur text"}>
                   {isBlurred ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                 </button>
                 <div>{renderConnectionStatus()}</div>
@@ -266,9 +267,9 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
         {currentInput && !isFirstTurnRef.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentInput}</span><MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
-        {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-700 text-dark-text-secondary rounded-bl-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentOutput}</span></div></div>}
+        {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-100 text-light-text-secondary dark:bg-gray-700 dark:text-dark-text-secondary rounded-bl-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentOutput}</span></div></div>}
       </div>
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={handleStop}
           className="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200"

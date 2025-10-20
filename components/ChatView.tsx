@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { JLPTLevel, ChatMessage } from '../types';
 import { createBlob, AudioPlaybackManager, resampleAndEncodeAudio, AudioInputManager } from '../utils/audio';
+import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
 import { EyeIcon } from './icons/EyeIcon';
 import { EyeOffIcon } from './icons/EyeOffIcon';
+import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 import { 
     TTS_MODEL, 
     LIVE_SESSION_MODEL, 
@@ -22,14 +24,17 @@ enum ConnectionState {
 }
 
 interface ChatViewProps {
-  jlptLevel: JLPTLevel;
+  chatId: string;
   onEndChat: () => void;
   initialInstruction: string;
   defaultBlur: boolean;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat, initialInstruction, defaultBlur }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+const ChatView: React.FC<ChatViewProps> = ({ chatId, onEndChat, initialInstruction, defaultBlur }) => {
+  const { getChat, updateChatMessages } = useChatHistory();
+  const chatSession = getChat(chatId);
+
+  const [messages, setMessages] = useState<ChatMessage[]>(chatSession?.messages || []);
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.IDLE);
   const [currentInput, setCurrentInput] = useState('');
   const [currentOutput, setCurrentOutput] = useState('');
@@ -42,49 +47,38 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat, initialInstru
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const currentInputRef = useRef('');
   const currentOutputRef = useRef('');
-  const isFirstTurnRef = useRef(true);
+  
+  const isNewChat = useRef((chatSession?.messages.length ?? 0) === 0);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, currentInput, currentOutput]);
 
-  const getSystemInstruction = (level: JLPTLevel, triggerWord: string): string => {
-    return `You are a friendly and patient Japanese teacher, 日本語の先生.
+  const getSystemInstruction = (level: JLPTLevel, triggerWord: string, isNew: boolean): string => {
+    const baseInstruction = `You are a friendly and patient Japanese teacher, 日本語の先生.
 Your student's level is JLPT ${level}.
 Your goal is to help the student become fluent in spoken Japanese through conversation.
-1. The student will start the conversation by saying "${triggerWord}". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
-2. Maintain the conversation using vocabulary, grammar, and topics suitable for the ${level} level.
-3. Speak clearly and at a natural, but not overly fast, pace.
-4. If the student makes a significant grammatical error, gently provide a correction after they have finished speaking.
-5. Keep your responses concise to encourage the student to speak more and be proactive providing topics of conversation.`;
+You must maintain the conversation using vocabulary, grammar, and topics suitable for the ${level} level.
+Speak clearly and at a natural, but not overly fast, pace.
+If the student makes a significant grammatical error, gently provide a correction after they have finished speaking.
+Keep your responses concise to encourage the student to speak more and be proactive providing topics of conversation.`;
+
+    if (isNew) {
+      return `The student will start the conversation by saying "${triggerWord}". You must greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.\n${baseInstruction}`;
+    } else {
+      return `You are resuming a conversation with your student. The student will speak first. You must respond to them naturally to continue the conversation.\n${baseInstruction}`;
+    }
   };
 
   const startSession = useCallback(async () => {
+    if (!chatSession) return;
     setConnectionState(ConnectionState.CONNECTING);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
-      // Generate audio for trigger word to kickstart the conversation
-      const ttsResponse = await ai.models.generateContent({
-        model: TTS_MODEL,
-        contents: [{ parts: [{ text: initialInstruction }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: INITIAL_INSTRUCTION_VOICE }, 
-            },
-          },
-        },
-      });
-      const base64Audio24k = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-
-
       outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: OUTPUT_SAMPLE_RATE });
-      
       audioPlaybackManagerRef.current = new AudioPlaybackManager(outputAudioContextRef.current);
 
       audioInputManagerRef.current = new AudioInputManager((pcmData) => {
@@ -100,17 +94,32 @@ Your goal is to help the student become fluent in spoken Japanese through conver
         callbacks: {
           onopen: async () => {
             setConnectionState(ConnectionState.CONNECTED);
-
-            // Resample the TTS audio from 24kHz to 16kHz and send it to the live session
-            if (base64Audio24k && outputAudioContextRef.current) {
-              try {
-                const pcmBlob = await resampleAndEncodeAudio(base64Audio24k, outputAudioContextRef.current);
-                sessionPromiseRef.current?.then((session) => {
-                    session.sendRealtimeInput({ media: pcmBlob });
+            
+            if (isNewChat.current && outputAudioContextRef.current) {
+                const ttsResponse = await ai.models.generateContent({
+                    model: TTS_MODEL,
+                    contents: [{ parts: [{ text: initialInstruction }] }],
+                    config: {
+                      responseModalities: [Modality.AUDIO],
+                      speechConfig: {
+                        voiceConfig: {
+                          prebuiltVoiceConfig: { voiceName: INITIAL_INSTRUCTION_VOICE }, 
+                        },
+                      },
+                    },
                 });
-              } catch (e) {
-                  console.error("Failed to process trigger audio:", e);
-              }
+                const base64Audio24k = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+                if (base64Audio24k) {
+                    try {
+                        const pcmBlob = await resampleAndEncodeAudio(base64Audio24k, outputAudioContextRef.current);
+                        sessionPromiseRef.current?.then((session) => {
+                            session.sendRealtimeInput({ media: pcmBlob });
+                        });
+                    } catch (e) {
+                        console.error("Failed to process trigger audio:", e);
+                    }
+                }
             }
           },
           onmessage: async (message: LiveServerMessage) => {
@@ -131,31 +140,24 @@ Your goal is to help the student become fluent in spoken Japanese through conver
             if (message.serverContent?.turnComplete) {
                 const finalInput = currentInputRef.current.trim();
                 const finalOutput = currentOutputRef.current.trim();
+                let newMessages = [...messages];
 
-                if (isFirstTurnRef.current) {
-                    // This is the first turn. The input is the automatic greeting.
-                    // We only want to show the AI's response to start the conversation.
-                    setMessages(prev => {
-                        const newMessages = [...prev];
-                        if (finalOutput) {
-                            newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
-                        }
-                        return newMessages;
-                    });
-                    isFirstTurnRef.current = false; // The first turn is now complete
+                if (isNewChat.current) {
+                    if (finalOutput) {
+                        newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                    }
+                    isNewChat.current = false;
                 } else {
-                    // Subsequent turns should show both user and AI messages.
-                    setMessages(prev => {
-                        const newMessages = [...prev];
-                        if (finalInput) {
-                            newMessages.push({ id: `user-${Date.now()}`, sender: 'user', text: finalInput });
-                        }
-                        if (finalOutput) {
-                            newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
-                        }
-                        return newMessages;
-                    });
+                    if (finalInput) {
+                        newMessages.push({ id: `user-${Date.now()}`, sender: 'user', text: finalInput });
+                    }
+                    if (finalOutput) {
+                        newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                    }
                 }
+
+                setMessages(newMessages);
+                updateChatMessages(chatId, newMessages);
                 
                 currentInputRef.current = '';
                 currentOutputRef.current = '';
@@ -185,8 +187,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TEACHER_VOICE } } },
-          systemInstruction: getSystemInstruction(jlptLevel, initialInstruction),
-          proactivity: { proactiveAudio: true },
+          systemInstruction: getSystemInstruction(chatSession.jlptLevel, initialInstruction, isNewChat.current),
         },
       });
       sessionPromiseRef.current = sessionPromise;
@@ -195,7 +196,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       console.error('Failed to start session:', err);
       setConnectionState(ConnectionState.ERROR);
     }
-  }, [jlptLevel, initialInstruction]);
+  }, [chatSession, initialInstruction, chatId, updateChatMessages, messages]);
 
   const cleanup = useCallback(() => {
     sessionPromiseRef.current?.then(session => session.close());
@@ -217,8 +218,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     return () => {
       cleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startSession]);
+  }, [startSession, cleanup]);
 
   const handleStop = () => {
     cleanup();
@@ -252,11 +252,23 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     }
   };
 
+  if (!chatSession) {
+    return (
+        <div className="flex items-center justify-center h-full text-light-text-secondary dark:text-dark-text-secondary">
+            Chat not found.
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-light-surface dark:bg-dark-surface">
         <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <span className="font-semibold text-lg">{jlptLevel} Level</span>
+            <div className="flex items-center gap-2">
+                 <button onClick={handleStop} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="End chat and go back">
+                    <ArrowLeftIcon className="w-6 h-6 text-light-text-secondary dark:text-dark-text-secondary" />
+                </button>
+                <span className="font-semibold text-lg">{chatSession.jlptLevel} Level</span>
+            </div>
             <div className="flex items-center gap-4">
                 <button onClick={toggleBlur} className="text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-white transition-colors" aria-label={isBlurred ? "Show text" : "Blur text"}>
                   {isBlurred ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -266,16 +278,8 @@ Your goal is to help the student become fluent in spoken Japanese through conver
         </div>
       <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
-        {currentInput && !isFirstTurnRef.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentInput}</span><MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
+        {currentInput && !isNewChat.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentInput}</span><MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
         {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-100 text-light-text-secondary dark:bg-gray-700 dark:text-dark-text-secondary rounded-bl-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentOutput}</span></div></div>}
-      </div>
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <button
-          onClick={handleStop}
-          className="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200"
-        >
-          End Chat
-        </button>
       </div>
     </div>
   );

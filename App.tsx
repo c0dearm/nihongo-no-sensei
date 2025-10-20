@@ -3,24 +3,61 @@ import { JLPTLevel } from './types';
 import LevelSelector from './components/LevelSelector';
 import ChatView from './components/ChatView';
 import SettingsView from './components/SettingsView';
+import HistoryView from './components/HistoryView';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { ChatHistoryProvider, useChatHistory } from './contexts/ChatHistoryContext';
 import { GearIcon } from './components/icons/GearIcon';
 
 const AppContent: React.FC = () => {
-  const [selectedLevel, setSelectedLevel] = useState<JLPTLevel | null>(null);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [isCreatingNewChat, setIsCreatingNewChat] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { settings } = useSettings();
+  const { startNewChat } = useChatHistory();
 
-  const handleLevelSelect = useCallback((level: JLPTLevel) => {
-    setSelectedLevel(level);
+  const handleStartNewChat = useCallback(() => {
+    setIsCreatingNewChat(true);
   }, []);
 
+  const handleSelectChat = useCallback((chatId: string) => {
+    setActiveChatId(chatId);
+    setIsCreatingNewChat(false);
+  }, []);
+  
+  const handleLevelSelect = useCallback((level: JLPTLevel) => {
+    const newChat = startNewChat(level);
+    setActiveChatId(newChat.id);
+    setIsCreatingNewChat(false);
+  }, [startNewChat]);
+
   const handleEndChat = useCallback(() => {
-    setSelectedLevel(null);
+    setActiveChatId(null);
+  }, []);
+
+  const handleBackFromLevelSelect = useCallback(() => {
+    setIsCreatingNewChat(false);
   }, []);
 
   const openSettings = () => setIsSettingsOpen(true);
   const closeSettings = () => setIsSettingsOpen(false);
+
+  const renderContent = () => {
+    if (activeChatId) {
+      return (
+        <ChatView
+          key={activeChatId} // Add key to force re-mount on chat change
+          chatId={activeChatId}
+          onEndChat={handleEndChat}
+          initialInstruction={settings.initialInstruction}
+          defaultBlur={settings.defaultBlur}
+        />
+      );
+    }
+    if (isCreatingNewChat) {
+      return <LevelSelector onSelectLevel={handleLevelSelect} onBack={handleBackFromLevelSelect} />;
+    }
+    return <HistoryView onSelectChat={handleSelectChat} onStartNewChat={handleStartNewChat} />;
+  }
 
   return (
     <div className="min-h-screen bg-light-bg dark:bg-dark-bg font-sans flex flex-col items-center justify-center p-4">
@@ -39,16 +76,7 @@ const AppContent: React.FC = () => {
           </button>
         </header>
         <main className="flex-grow flex flex-col min-h-0">
-          {selectedLevel ? (
-            <ChatView
-              jlptLevel={selectedLevel}
-              onEndChat={handleEndChat}
-              initialInstruction={settings.initialInstruction}
-              defaultBlur={settings.defaultBlur}
-            />
-          ) : (
-            <LevelSelector onSelectLevel={handleLevelSelect} />
-          )}
+          {renderContent()}
         </main>
         {isSettingsOpen && <SettingsView onClose={closeSettings} />}
       </div>
@@ -59,7 +87,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <SettingsProvider>
-      <AppContent />
+      <ChatHistoryProvider>
+        <AppContent />
+      </ChatHistoryProvider>
     </SettingsProvider>
   );
 };

@@ -16,3 +16,11 @@ export interface MediaBlob {
   data: string;
   mimeType: string;
 }
+
+export interface ChatSession {
+  id: string;
+  jlptLevel: JLPTLevel;
+  messages: ChatMessage[];
+  createdAt: number;
+  lastUpdatedAt: number;
+}

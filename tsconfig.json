@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -13,8 +17,18 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ]
   },
-  "include": ["."],
-  "exclude": ["node_modules"]
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

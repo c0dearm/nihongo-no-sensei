@@ -92,6 +92,6 @@ To run this application on your local machine for development, you'll need Node.
 
 Once the installation is complete, you can start the development server:
 ```bash
-npm run dev
+npx vite
 ```
 Vite will start the server and provide a local URL (like `http://localhost:5173`) that you can open in your web browser. The application will be ready to use.

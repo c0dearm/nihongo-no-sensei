@@ -1,48 +1,16 @@
-<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>日本語の先生 - AI Japanese Teacher</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              'primary': '#4A90E2',
-              'secondary': '#50E3C2',
-              'dark-bg': '#121212',
-              'dark-surface': '#1E1E1E',
-              'dark-text': '#E0E0E0',
-              'dark-text-secondary': '#B0B0B0',
-              'light-bg': '#F7F9FC',
-              'light-surface': '#FFFFFF',
-              'light-text': '#202124',
-              'light-text-secondary': '#5F6368',
-            }
-          }
-        }
-      }
-    </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "vite": "https://aistudiocdn.com/vite@^7.1.11",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.4"
-  }
-}
-</script>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link href="/style.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>日本語の先生 - AI Japanese Teacher</title>
 </head>
-  <body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-200">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text transition-colors duration-200">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

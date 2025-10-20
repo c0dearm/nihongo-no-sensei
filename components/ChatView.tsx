@@ -1,9 +1,18 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { JLPTLevel, ChatMessage } from '../types';
-import { createBlob, decode, decodeAudioData, encode } from '../utils/audio';
+import { createBlob, AudioPlaybackManager, resampleAndEncodeAudio, AudioInputManager } from '../utils/audio';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
+import { EyeIcon } from './icons/EyeIcon';
+import { EyeOffIcon } from './icons/EyeOffIcon';
+import { 
+    TTS_MODEL, 
+    LIVE_SESSION_MODEL, 
+    INITIAL_GREETING_VOICE, 
+    TEACHER_VOICE, 
+    TRIGGER_WORD, 
+    OUTPUT_SAMPLE_RATE
+} from '../constants';
 
 enum ConnectionState {
   IDLE,
@@ -23,14 +32,12 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.IDLE);
   const [currentInput, setCurrentInput] = useState('');
   const [currentOutput, setCurrentOutput] = useState('');
+  const [isBlurred, setIsBlurred] = useState(false);
   
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
-  const inputAudioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
-  const outputSources = useRef<Set<AudioBufferSourceNode>>(new Set());
-  const nextStartTime = useRef(0);
+  const audioPlaybackManagerRef = useRef<AudioPlaybackManager | null>(null);
+  const audioInputManagerRef = useRef<AudioInputManager | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const currentInputRef = useRef('');
   const currentOutputRef = useRef('');
@@ -47,11 +54,11 @@ const ChatView: React.FC<ChatViewProps> = ({ jlptLevel, onEndChat }) => {
     return `You are a friendly and patient Japanese teacher, 日本語の先生.
 Your student's level is JLPT ${level}.
 Your goal is to help the student become fluent in spoken Japanese through conversation.
-1. The student will start the conversation by saying "こんにちは". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
+1. The student will start the conversation by saying "${TRIGGER_WORD}". Greet them back and ask a simple question appropriate for the ${level} level to get the conversation started.
 2. Maintain the conversation using vocabulary, grammar, and topics suitable for the ${level} level.
 3. Speak clearly and at a natural, but not overly fast, pace.
 4. If the student makes a significant grammatical error, gently provide a correction after they have finished speaking.
-5. Keep your responses concise to encourage the student to speak more.`;
+5. Keep your responses concise to encourage the student to speak more and be proactive providing topics of conversation.`;
   };
 
   const startSession = useCallback(async () => {
@@ -59,16 +66,15 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
-      // Generate audio for "こんにちは" to kickstart the conversation
+      // Generate audio for trigger word to kickstart the conversation
       const ttsResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: 'こんにちは' }] }],
+        model: TTS_MODEL,
+        contents: [{ parts: [{ text: TRIGGER_WORD }] }],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
-              // Use a neutral, standard voice for the initial greeting
-              prebuiltVoiceConfig: { voiceName: 'Puck' }, 
+              prebuiltVoiceConfig: { voiceName: INITIAL_GREETING_VOICE }, 
             },
           },
         },
@@ -76,14 +82,20 @@ Your goal is to help the student become fluent in spoken Japanese through conver
       const base64Audio24k = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-
-      inputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: OUTPUT_SAMPLE_RATE });
       
+      audioPlaybackManagerRef.current = new AudioPlaybackManager(outputAudioContextRef.current);
+
+      audioInputManagerRef.current = new AudioInputManager((pcmData) => {
+        const pcmBlob = createBlob(pcmData);
+        sessionPromiseRef.current?.then((session) => {
+          session.sendRealtimeInput({ media: pcmBlob });
+        });
+      });
+      await audioInputManagerRef.current.start();
+
       const sessionPromise = ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        model: LIVE_SESSION_MODEL,
         callbacks: {
           onopen: async () => {
             setConnectionState(ConnectionState.CONNECTED);
@@ -91,37 +103,7 @@ Your goal is to help the student become fluent in spoken Japanese through conver
             // Resample the TTS audio from 24kHz to 16kHz and send it to the live session
             if (base64Audio24k && outputAudioContextRef.current) {
               try {
-                // 1. Decode 24kHz TTS audio
-                const audioData24k = decode(base64Audio24k);
-                const audioBuffer24k = await decodeAudioData(audioData24k, outputAudioContextRef.current, 24000, 1);
-                
-                // 2. Resample to 16kHz
-                const targetSampleRate = 16000;
-                const offlineContext = new OfflineAudioContext(
-                    audioBuffer24k.numberOfChannels,
-                    audioBuffer24k.duration * targetSampleRate,
-                    targetSampleRate
-                );
-                const bufferSource = offlineContext.createBufferSource();
-                bufferSource.buffer = audioBuffer24k;
-                bufferSource.connect(offlineContext.destination);
-                bufferSource.start();
-                const resampledBuffer16k = await offlineContext.startRendering();
-
-                // 3. Convert resampled AudioBuffer to Int16 PCM data
-                const pcmData = resampledBuffer16k.getChannelData(0);
-                const l = pcmData.length;
-                const int16 = new Int16Array(l);
-                for (let i = 0; i < l; i++) {
-                    const s = Math.max(-1, Math.min(1, pcmData[i]));
-                    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                }
-                
-                // 4. Create blob and send to live session
-                const pcmBlob = {
-                    data: encode(new Uint8Array(int16.buffer)),
-                    mimeType: 'audio/pcm;rate=16000',
-                };
+                const pcmBlob = await resampleAndEncodeAudio(base64Audio24k, outputAudioContextRef.current);
                 sessionPromiseRef.current?.then((session) => {
                     session.sendRealtimeInput({ media: pcmBlob });
                 });
@@ -129,31 +111,21 @@ Your goal is to help the student become fluent in spoken Japanese through conver
                   console.error("Failed to process trigger audio:", e);
               }
             }
-
-            const source = inputAudioContextRef.current!.createMediaStreamSource(stream);
-            const scriptProcessor = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
-            scriptProcessorRef.current = scriptProcessor;
-
-            scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
-              const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
-              const pcmBlob = createBlob(inputData);
-              sessionPromiseRef.current?.then((session) => {
-                session.sendRealtimeInput({ media: pcmBlob });
-              });
-            };
-            source.connect(scriptProcessor);
-            scriptProcessor.connect(inputAudioContextRef.current!.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
             if (message.serverContent?.inputTranscription) {
               const text = message.serverContent.inputTranscription.text;
-              currentInputRef.current += text;
-              setCurrentInput(currentInputRef.current);
+              if (text) {
+                currentInputRef.current += text;
+                setCurrentInput(currentInputRef.current);
+              }
             }
             if (message.serverContent?.outputTranscription) {
               const text = message.serverContent.outputTranscription.text;
-              currentOutputRef.current += text;
-              setCurrentOutput(currentOutputRef.current);
+              if (text) {
+                currentOutputRef.current += text;
+                setCurrentOutput(currentOutputRef.current);
+              }
             }
             if (message.serverContent?.turnComplete) {
                 const finalInput = currentInputRef.current.trim();
@@ -191,26 +163,12 @@ Your goal is to help the student become fluent in spoken Japanese through conver
             }
             
             const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio && outputAudioContextRef.current) {
-                const audioContext = outputAudioContextRef.current;
-                nextStartTime.current = Math.max(nextStartTime.current, audioContext.currentTime);
-                const audioBuffer = await decodeAudioData(decode(base64Audio), audioContext, 24000, 1);
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContext.destination);
-                
-                source.onended = () => outputSources.current.delete(source);
-                source.start(nextStartTime.current);
-                nextStartTime.current += audioBuffer.duration;
-                outputSources.current.add(source);
+            if (base64Audio && audioPlaybackManagerRef.current) {
+                await audioPlaybackManagerRef.current.play(base64Audio);
             }
 
             if (message.serverContent?.interrupted) {
-                for (const source of outputSources.current) {
-                  source.stop();
-                }
-                outputSources.current.clear();
-                nextStartTime.current = 0;
+              audioPlaybackManagerRef.current?.stopAll();
             }
           },
           onerror: (e: ErrorEvent) => {
@@ -225,8 +183,9 @@ Your goal is to help the student become fluent in spoken Japanese through conver
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TEACHER_VOICE } } },
           systemInstruction: getSystemInstruction(jlptLevel),
+          proactivity: { proactiveAudio: true },
         },
       });
       sessionPromiseRef.current = sessionPromise;
@@ -241,23 +200,15 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     sessionPromiseRef.current?.then(session => session.close());
     sessionPromiseRef.current = null;
 
-    mediaStreamRef.current?.getTracks().forEach(track => track.stop());
-    mediaStreamRef.current = null;
-    
-    scriptProcessorRef.current?.disconnect();
-    scriptProcessorRef.current = null;
+    audioInputManagerRef.current?.stop();
+    audioInputManagerRef.current = null;
 
-    if (inputAudioContextRef.current && inputAudioContextRef.current.state !== 'closed') {
-      inputAudioContextRef.current.close();
-    }
     if (outputAudioContextRef.current && outputAudioContextRef.current.state !== 'closed') {
       outputAudioContextRef.current.close();
     }
     
-    for (const source of outputSources.current) {
-        source.stop();
-    }
-    outputSources.current.clear();
+    audioPlaybackManagerRef.current?.stopAll();
+    audioPlaybackManagerRef.current = null;
   },[]);
 
   useEffect(() => {
@@ -272,11 +223,15 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     cleanup();
     onEndChat();
   };
+
+  const toggleBlur = () => {
+    setIsBlurred(prev => !prev);
+  };
   
   const renderMessage = (msg: ChatMessage) => (
     <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-gray-700 text-dark-text rounded-bl-none'}`}>
-        <p>{msg.text}</p>
+        <p className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{msg.text}</p>
       </div>
     </div>
   );
@@ -301,12 +256,17 @@ Your goal is to help the student become fluent in spoken Japanese through conver
     <div className="flex flex-col h-full bg-dark-surface">
         <div className="p-3 border-b border-gray-700 flex justify-between items-center">
             <span className="font-semibold text-lg">{jlptLevel} Level</span>
-            <div>{renderConnectionStatus()}</div>
+            <div className="flex items-center gap-4">
+                <button onClick={toggleBlur} className="text-dark-text-secondary hover:text-white transition-colors" aria-label={isBlurred ? "Show text" : "Blur text"}>
+                  {isBlurred ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                </button>
+                <div>{renderConnectionStatus()}</div>
+            </div>
         </div>
       <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
-        {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-700 text-dark-text-secondary rounded-bl-none italic">{currentOutput}</div></div>}
-        {currentInput && !isFirstTurnRef.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic">{currentInput}<MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
+        {currentInput && !isFirstTurnRef.current && <div className="flex justify-end mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentInput}</span><MicrophoneIcon className="inline-block w-4 h-4 ml-2 animate-pulse" /></div></div>}
+        {currentOutput && <div className="flex justify-start mb-4"><div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-gray-700 text-dark-text-secondary rounded-bl-none italic"><span className={`transition-all duration-300 ${isBlurred ? 'blur-sm select-none' : ''}`}>{currentOutput}</span></div></div>}
       </div>
       <div className="p-4 border-t border-gray-700">
         <button

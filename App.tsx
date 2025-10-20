@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { JLPTLevel } from './types';
 import LevelSelector from './components/LevelSelector';
@@ -22,7 +21,7 @@ const App: React.FC = () => {
           <h1 className="text-2xl font-bold text-white">日本語の先生</h1>
           <p className="text-sm text-dark-text-secondary">Your AI Japanese Speaking Partner</p>
         </header>
-        <main className="flex-grow flex flex-col">
+        <main className="flex-grow flex flex-col min-h-0">
           {selectedLevel ? (
             <ChatView jlptLevel={selectedLevel} onEndChat={handleEndChat} />
           ) : (

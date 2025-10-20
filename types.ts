@@ -1,4 +1,3 @@
-
 export enum JLPTLevel {
   N5 = 'N5',
   N4 = 'N4',
@@ -11,4 +10,9 @@ export interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
   text: string;
+}
+
+export interface MediaBlob {
+  data: string;
+  mimeType: string;
 }

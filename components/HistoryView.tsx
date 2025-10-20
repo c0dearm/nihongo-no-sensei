@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { PlusIcon } from './icons/PlusIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -10,13 +10,23 @@ interface HistoryViewProps {
 
 const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat }) => {
   const { chatHistory, deleteChat } = useChatHistory();
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const handleDelete = (e: React.MouseEvent, chatId: string) => {
-    e.stopPropagation(); // Prevent card click
-    if (window.confirm('Are you sure you want to delete this chat?')) {
-        deleteChat(chatId);
-    }
+  const handleConfirmDelete = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    deleteChat(chatId);
+    setPendingDeleteId(null);
   };
+  
+  const handleInitiateDelete = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    setPendingDeleteId(chatId);
+  }
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPendingDeleteId(null);
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -39,11 +49,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
           <ul className="space-y-3">
             {chatHistory.map((chat) => (
               <li key={chat.id}>
-                <button
-                  onClick={() => onSelectChat(chat.id)}
-                  className="w-full text-left p-4 bg-light-bg dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex justify-between items-center group"
+                <div
+                  className="w-full text-left bg-light-bg dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex justify-between items-center group"
                 >
-                  <div className="overflow-hidden">
+                  <button onClick={() => onSelectChat(chat.id)} className="flex-grow p-4 overflow-hidden text-left">
                     <p className="font-bold text-light-text dark:text-dark-text">{chat.jlptLevel} Conversation</p>
                     <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
                       {new Date(chat.lastUpdatedAt).toLocaleString()}
@@ -53,15 +62,36 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
                            "{chat.messages[chat.messages.length - 1].text}"
                         </p>
                     )}
-                  </div>
-                  <button
-                    onClick={(e) => handleDelete(e, chat.id)}
-                    className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 flex-shrink-0 ml-2"
-                    aria-label="Delete chat"
-                  >
-                    <TrashIcon className="w-5 h-5" />
                   </button>
-                </button>
+                  <div className="pr-4 pl-2 flex-shrink-0">
+                    {pendingDeleteId === chat.id ? (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={(e) => handleConfirmDelete(e, chat.id)}
+                                className="p-2 text-sm font-semibold text-red-600 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50"
+                                aria-label="Confirm delete"
+                            >
+                                Delete
+                            </button>
+                            <button
+                                onClick={handleCancelDelete}
+                                className="p-2 text-sm font-semibold text-gray-600 dark:text-gray-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
+                                aria-label="Cancel delete"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={(e) => handleInitiateDelete(e, chat.id)}
+                            className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            aria-label="Delete chat"
+                        >
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
+                    )}
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

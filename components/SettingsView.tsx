@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSettings, AppSettings } from '../contexts/SettingsContext';
+import { useSettings, AppSettings, Theme } from '../contexts/SettingsContext';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 
 interface SettingsViewProps {
@@ -26,6 +26,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onClose }) => {
         setSettings({ ...settings, [field]: value });
     };
 
+    const themes: { value: Theme; label: string }[] = [
+        { value: 'system', label: 'System Default' },
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+    ];
+
     return (
         <div
             className={`absolute inset-0 bg-light-surface dark:bg-dark-surface z-10 flex flex-col transition-transform duration-300 ease-in-out transform ${isVisible ? 'translate-x-0' : 'translate-x-full'}`}
@@ -38,6 +44,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onClose }) => {
                     <h2 className="text-xl font-bold text-center flex-grow text-light-text dark:text-white">Settings</h2>
                 </header>
                 <div className="flex-grow p-6 overflow-y-auto space-y-8">
+                    {/* Theme Setting */}
+                    <div>
+                        <label className="block text-lg font-semibold mb-2">Theme</label>
+                        <div className="flex flex-col sm:flex-row gap-2 rounded-lg p-1 bg-gray-100 dark:bg-gray-800">
+                            {themes.map(theme => (
+                                <button
+                                    key={theme.value}
+                                    onClick={() => handleChange('theme', theme.value)}
+                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors focus:outline-none ${settings.theme === theme.value
+                                        ? 'bg-white dark:bg-gray-700 text-primary dark:text-secondary shadow'
+                                        : 'hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {theme.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     {/* Initial Instruction Setting */}
                     <div>
                         <label htmlFor="initialInstruction" className="block text-lg font-semibold mb-2">Initial Instruction</label>

@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+export type Theme = 'system' | 'light' | 'dark';
+
 export interface AppSettings {
+  theme: Theme;
   initialInstruction: string;
   defaultBlur: boolean;
 }
@@ -11,6 +14,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
+  theme: 'system',
   initialInstruction: 'こんにちは',
   defaultBlur: false,
 };
@@ -38,6 +42,24 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error('Error saving settings to localStorage', error);
     }
   }, [settings]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isDark =
+      settings.theme === 'dark' ||
+      (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    root.classList.toggle('dark', isDark);
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (settings.theme === 'system') {
+        root.classList.toggle('dark', mediaQuery.matches);
+      }
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [settings.theme]);
 
   const setSettings = (newSettings: AppSettings) => {
     setSettingsState(newSettings);

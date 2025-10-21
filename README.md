@@ -13,7 +13,7 @@ An interactive AI-powered Japanese speaking partner designed to help you achieve
 *   **Chat History**: All your practice sessions are saved, allowing you to review past conversations and track your progress.
 *   **Customizable Experience**:
     *   Choose between Light, Dark, or System default themes.
-    *   Set a custom "trigger phrase" to start each new conversation.
+    *   Set a custom "initial instruction" to start each new conversation.
     *   Set the default state for blurring messages.
 *   **Responsive Design**: A clean, modern, and responsive UI that works beautifully on any device.
 
@@ -42,26 +42,23 @@ This application leverages the power of Google's Gemini API to create a seamless
 
 ## 📁 Project Structure
 
-The codebase is organized into a clean and maintainable structure:
+The codebase is organized into a clean and maintainable structure, with all source code residing in the `src` directory:
 
 ```
-.
-├── components/          # Reusable React components
-│   ├── icons/           # SVG icon components
-│   ├── ChatView.tsx     # The main conversation interface
-│   ├── HistoryView.tsx  # Displays the list of past chats
-│   ├── LevelSelector.tsx# Component for selecting JLPT level
-│   └── SettingsView.tsx # The settings panel
-├── contexts/            # React Context providers for global state
-│   ├── ChatHistoryContext.tsx
-│   └── SettingsContext.tsx
-├── utils/               # Utility functions
-│   └── audio.ts         # Audio encoding, decoding, and management
-├── App.tsx              # Main application component
-├── constants.ts         # Global constants (e.g., model names)
-├── index.html           # The main HTML file
-├── index.tsx            # React app entry point
-└── types.ts             # TypeScript type definitions
+/
+├── src/
+│   ├── components/      # Reusable React components
+│   ├── contexts/        # React Context providers
+│   ├── utils/           # Utility functions
+│   ├── App.tsx          # Main application component
+│   ├── index.tsx        # React app entry point
+│   ├── style.css        # Global styles
+│   └── types.ts         # TypeScript type definitions
+├── .gitignore
+├── index.html
+├── package.json
+├── README.md
+└── vite.config.ts
 ```
 
 ## 💻 Running Locally
@@ -90,8 +87,9 @@ To run this application on your local machine for development, you'll need Node.
 
 **3. Run the Application**
 
-Once the installation is complete, you can start the development server:
-```bash
-npx vite
-```
-Vite will start the server and provide a local URL (like `http://localhost:5173`) that you can open in your web browser. The application will be ready to use.
+Once the installation is complete, you can use the following scripts:
+
+*   **`npm run dev`**: Starts the development server, will run on `http://localhost:5173`.
+*   **`npm run build`**: Builds the application for production.
+*   **`npm run preview`**: Previews the production build locally.
+*   **`npm run lint`**: Lint the project.

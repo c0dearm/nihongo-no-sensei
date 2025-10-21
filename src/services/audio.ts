@@ -161,8 +161,11 @@ export class AudioInputManager {
 
         try {
             this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const audioTrack = this.mediaStream.getAudioTracks()[0];
+            const sampleRate = audioTrack.getSettings().sampleRate;
+
             const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
-            this.audioContext = new AudioContext({ sampleRate: INPUT_SAMPLE_RATE });
+            this.audioContext = new AudioContext({ sampleRate });
 
             const blob = new Blob([AUDIO_PROCESSOR_CODE], { type: 'application/javascript' });
             const url = URL.createObjectURL(blob);

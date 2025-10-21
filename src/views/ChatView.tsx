@@ -18,7 +18,7 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, onEndChat, initialInstructi
   const { getChat } = useChatHistory();
   const chatSession = getChat(chatId);
 
-  const { messages, connectionState, currentInput, currentOutput, cleanup } = useGeminiLive({
+  const { messages, connectionState, currentInput, currentOutput } = useGeminiLive({
     chatId,
     initialInstruction,
   });
@@ -34,7 +34,6 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, onEndChat, initialInstructi
   }, [messages, currentInput, currentOutput]);
 
   const handleStop = () => {
-    cleanup();
     onEndChat();
   };
 

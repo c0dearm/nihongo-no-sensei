@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { JLPTLevel } from './models/types';
+import { JLPTLevel, ChatId } from './models/types';
 import SettingsView from './views/SettingsView';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { ChatHistoryProvider, useChatHistory } from './contexts/ChatHistoryContext';
@@ -8,7 +8,7 @@ import Main from './components/Main';
 import Layout from './components/Layout';
 
 const AppContent: React.FC = () => {
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<ChatId | null>(null);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { startNewChat } = useChatHistory();
@@ -18,7 +18,7 @@ const AppContent: React.FC = () => {
     setIsCreatingNewChat(true);
   }, []);
 
-  const handleSelectChat = useCallback((chatId: string) => {
+  const handleSelectChat = useCallback((chatId: ChatId) => {
     setActiveChatId(chatId);
     setIsCreatingNewChat(false);
   }, []);

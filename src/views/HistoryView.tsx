@@ -2,23 +2,24 @@ import React, { useState } from 'react';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { PlusIcon } from '../icons/PlusIcon';
 import { TrashIcon } from '../icons/TrashIcon';
+import { ChatId } from '../models/types';
 
 interface HistoryViewProps {
-  onSelectChat: (chatId: string) => void;
+  onSelectChat: (chatId: ChatId) => void;
   onStartNewChat: () => void;
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat }) => {
   const { chatHistory, deleteChat } = useChatHistory();
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<ChatId | null>(null);
 
-  const handleConfirmDelete = (e: React.MouseEvent, chatId: string) => {
+  const handleConfirmDelete = (e: React.MouseEvent, chatId: ChatId) => {
     e.stopPropagation();
     deleteChat(chatId);
     setPendingDeleteId(null);
   };
 
-  const handleInitiateDelete = (e: React.MouseEvent, chatId: string) => {
+  const handleInitiateDelete = (e: React.MouseEvent, chatId: ChatId) => {
     e.stopPropagation();
     setPendingDeleteId(chatId);
   }

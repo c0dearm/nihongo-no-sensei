@@ -49,7 +49,7 @@ The codebase is organized into a clean and maintainable structure, with all sour
 ├── src/
 │   ├── components/      # Reusable React components (Header, Layout, Main)
 │   ├── contexts/        # React Context providers (ChatHistory, Settings)
-│   ├── hooks/           # Custom React hooks (useChatConnection)
+│   ├── hooks/           # Custom React hooks (useGeminiLive)
 │   ├── icons/           # SVG icon components
 │   ├── models/          # TypeScript types and constants
 │   ├── services/        # Audio processing services

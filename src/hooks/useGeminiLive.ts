@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
-import { JLPTLevel, ChatMessage, ChatSession } from '../models/types';
+import { JLPTLevel, ChatMessage, ChatSession, ChatId, ChatMessageId } from '../models/types';
 import { createBlob, AudioPlaybackManager, resampleAndEncodeAudio, AudioInputManager } from '../services/audio';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import {
@@ -19,12 +19,12 @@ export enum ConnectionState {
   ERROR,
 }
 
-interface UseChatConnectionProps {
-  chatId: string;
+interface UseGeminiLiveProps {
+  chatId: ChatId;
   initialInstruction: string;
 }
 
-export const useChatConnection = ({ chatId, initialInstruction }: UseChatConnectionProps) => {
+export const useGeminiLive = ({ chatId, initialInstruction }: UseGeminiLiveProps) => {
   const { getChat, updateChatMessages } = useChatHistory();
   const chatSession = getChat(chatId) as ChatSession;
 
@@ -129,15 +129,15 @@ Keep your responses concise to encourage the student to speak more and be proact
 
               if (isNewChat.current) {
                 if (finalOutput) {
-                  newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                  newMessages.push({ id: `ai-${Date.now()}` as ChatMessageId, sender: 'ai', text: finalOutput });
                 }
                 isNewChat.current = false;
               } else {
                 if (finalInput) {
-                  newMessages.push({ id: `user-${Date.now()}`, sender: 'user', text: finalInput });
+                  newMessages.push({ id: `user-${Date.now()}` as ChatMessageId, sender: 'user', text: finalInput });
                 }
                 if (finalOutput) {
-                  newMessages.push({ id: `ai-${Date.now()}`, sender: 'ai', text: finalOutput });
+                  newMessages.push({ id: `ai-${Date.now()}` as ChatMessageId, sender: 'ai', text: finalOutput });
                 }
               }
 

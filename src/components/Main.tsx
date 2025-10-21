@@ -1,13 +1,13 @@
 import React from 'react';
-import { JLPTLevel } from '../models/types';
+import { JLPTLevel, ChatId } from '../models/types';
 import LevelSelectorView from '../views/LevelSelectorView';
 import ChatView from '../views/ChatView';
 import HistoryView from '../views/HistoryView';
 
 interface MainProps {
-  activeChatId: string | null;
+  activeChatId: ChatId | null;
   isCreatingNewChat: boolean;
-  handleSelectChat: (chatId: string) => void;
+  handleSelectChat: (chatId: ChatId) => void;
   handleStartNewChat: () => void;
   handleLevelSelect: (level: JLPTLevel) => void;
   handleEndChat: () => void;

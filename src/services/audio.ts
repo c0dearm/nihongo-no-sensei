@@ -1,5 +1,5 @@
 import { INPUT_SAMPLE_RATE, OUTPUT_SAMPLE_RATE } from '../models/constants';
-import { MediaBlob } from '../types';
+import { MediaBlob } from '../models/types';
 
 export function encode(bytes: Uint8Array): string {
     let binary = '';

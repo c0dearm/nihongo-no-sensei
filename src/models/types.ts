@@ -1,3 +1,6 @@
+export type ChatId = string & { readonly __brand: 'ChatId' };
+export type ChatMessageId = string & { readonly __brand: 'ChatMessageId' };
+
 export enum JLPTLevel {
   N5 = 'N5',
   N4 = 'N4',
@@ -7,7 +10,7 @@ export enum JLPTLevel {
 }
 
 export interface ChatMessage {
-  id: string;
+  id: ChatMessageId;
   sender: 'user' | 'ai';
   text: string;
 }
@@ -18,7 +21,7 @@ export interface MediaBlob {
 }
 
 export interface ChatSession {
-  id: string;
+  id: ChatId;
   jlptLevel: JLPTLevel;
   messages: ChatMessage[];
   createdAt: number;

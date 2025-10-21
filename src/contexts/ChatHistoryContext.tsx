@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { ChatSession, JLPTLevel, ChatMessage } from '../models/types';
+import { ChatSession, JLPTLevel, ChatMessage, ChatId } from '../models/types';
 
 const CHAT_HISTORY_KEY = 'chat-history';
 
 interface ChatHistoryContextType {
   chatHistory: ChatSession[];
   startNewChat: (level: JLPTLevel) => ChatSession;
-  updateChatMessages: (chatId: string, messages: ChatMessage[]) => void;
-  deleteChat: (chatId: string) => void;
-  getChat: (chatId: string) => ChatSession | undefined;
+  updateChatMessages: (chatId: ChatId, messages: ChatMessage[]) => void;
+  deleteChat: (chatId: ChatId) => void;
+  getChat: (chatId: ChatId) => ChatSession | undefined;
 }
 
 const ChatHistoryContext = createContext<ChatHistoryContextType | undefined>(undefined);
@@ -35,7 +35,7 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
   const startNewChat = useCallback((level: JLPTLevel): ChatSession => {
     const now = Date.now();
     const newChat: ChatSession = {
-      id: now.toString(),
+      id: now.toString() as ChatId,
       jlptLevel: level,
       messages: [],
       createdAt: now,
@@ -45,7 +45,7 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
     return newChat;
   }, []);
 
-  const updateChatMessages = useCallback((chatId: string, messages: ChatMessage[]) => {
+  const updateChatMessages = useCallback((chatId: ChatId, messages: ChatMessage[]) => {
     setChatHistory(prev => {
         const now = Date.now();
         const updatedHistory = prev.map(chat =>
@@ -60,11 +60,11 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
     });
   }, []);
 
-  const deleteChat = useCallback((chatId: string) => {
+  const deleteChat = useCallback((chatId: ChatId) => {
     setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
   }, []);
 
-  const getChat = useCallback((chatId: string): ChatSession | undefined => {
+  const getChat = useCallback((chatId: ChatId): ChatSession | undefined => {
     return chatHistory.find(chat => chat.id === chatId);
   }, [chatHistory]);
 

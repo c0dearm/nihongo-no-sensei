@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useChatConnection, ConnectionState } from '../hooks/useChatConnection';
+import { useGeminiLive, ConnectionState } from '../hooks/useGeminiLive';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-import { ChatMessage } from '../models/types';
+import { ChatMessage, ChatId } from '../models/types';
 import { MicrophoneIcon } from '../icons/MicrophoneIcon';
 import { EyeIcon } from '../icons/EyeIcon';
 import { EyeOffIcon } from '../icons/EyeOffIcon';
 import { ArrowLeftIcon } from '../icons/ArrowLeftIcon';
 
 interface ChatViewProps {
-  chatId: string;
+  chatId: ChatId;
   onEndChat: () => void;
   initialInstruction: string;
   defaultBlur: boolean;
@@ -18,7 +18,7 @@ const ChatView: React.FC<ChatViewProps> = ({ chatId, onEndChat, initialInstructi
   const { getChat } = useChatHistory();
   const chatSession = getChat(chatId);
 
-  const { messages, connectionState, currentInput, currentOutput, cleanup } = useChatConnection({
+  const { messages, connectionState, currentInput, currentOutput, cleanup } = useGeminiLive({
     chatId,
     initialInstruction,
   });

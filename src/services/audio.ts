@@ -1,92 +1,92 @@
-import { INPUT_SAMPLE_RATE, OUTPUT_SAMPLE_RATE } from '../constants';
+import { INPUT_SAMPLE_RATE, OUTPUT_SAMPLE_RATE } from '../models/constants';
 import { MediaBlob } from '../types';
 
 export function encode(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
 
 export function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
 }
 
 export async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number,
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
     }
-  }
-  return buffer;
+    return buffer;
 }
 
 export function createBlob(data: Float32Array): MediaBlob {
     const l = data.length;
     const int16 = new Int16Array(l);
     for (let i = 0; i < l; i++) {
-      int16[i] = data[i] * 32768;
+        int16[i] = data[i] * 32768;
     }
     return {
-      data: encode(new Uint8Array(int16.buffer)),
-      mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+        data: encode(new Uint8Array(int16.buffer)),
+        mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
     };
 }
 
 export async function resampleAndEncodeAudio(
-  base64Audio24k: string,
-  outputAudioContext: AudioContext,
+    base64Audio24k: string,
+    outputAudioContext: AudioContext,
 ): Promise<MediaBlob> {
-  const targetSampleRate = INPUT_SAMPLE_RATE;
-  
-  // 1. Decode 24kHz TTS audio
-  const audioData24k = decode(base64Audio24k);
-  const audioBuffer24k = await decodeAudioData(audioData24k, outputAudioContext, OUTPUT_SAMPLE_RATE, 1);
-  
-  // 2. Resample to 16kHz
-  const offlineContext = new OfflineAudioContext(
-      audioBuffer24k.numberOfChannels,
-      audioBuffer24k.duration * targetSampleRate,
-      targetSampleRate
-  );
-  const bufferSource = offlineContext.createBufferSource();
-  bufferSource.buffer = audioBuffer24k;
-  bufferSource.connect(offlineContext.destination);
-  bufferSource.start();
-  const resampledBuffer16k = await offlineContext.startRendering();
+    const targetSampleRate = INPUT_SAMPLE_RATE;
 
-  // 3. Convert resampled AudioBuffer to Int16 PCM data
-  const pcmData = resampledBuffer16k.getChannelData(0);
-  const l = pcmData.length;
-  const int16 = new Int16Array(l);
-  for (let i = 0; i < l; i++) {
-      const s = Math.max(-1, Math.min(1, pcmData[i]));
-      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-  }
-  
-  // 4. Create blob
-  return {
-      data: encode(new Uint8Array(int16.buffer)),
-      mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
-  };
+    // 1. Decode 24kHz TTS audio
+    const audioData24k = decode(base64Audio24k);
+    const audioBuffer24k = await decodeAudioData(audioData24k, outputAudioContext, OUTPUT_SAMPLE_RATE, 1);
+
+    // 2. Resample to 16kHz
+    const offlineContext = new OfflineAudioContext(
+        audioBuffer24k.numberOfChannels,
+        audioBuffer24k.duration * targetSampleRate,
+        targetSampleRate
+    );
+    const bufferSource = offlineContext.createBufferSource();
+    bufferSource.buffer = audioBuffer24k;
+    bufferSource.connect(offlineContext.destination);
+    bufferSource.start();
+    const resampledBuffer16k = await offlineContext.startRendering();
+
+    // 3. Convert resampled AudioBuffer to Int16 PCM data
+    const pcmData = resampledBuffer16k.getChannelData(0);
+    const l = pcmData.length;
+    const int16 = new Int16Array(l);
+    for (let i = 0; i < l; i++) {
+        const s = Math.max(-1, Math.min(1, pcmData[i]));
+        int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    // 4. Create blob
+    return {
+        data: encode(new Uint8Array(int16.buffer)),
+        mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+    };
 }
 
 
@@ -105,7 +105,7 @@ export class AudioPlaybackManager {
         const source = this.audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(this.audioContext.destination);
-        
+
         source.onended = () => this.sources.delete(source);
         source.start(this.nextStartTime);
         this.nextStartTime += audioBuffer.duration;

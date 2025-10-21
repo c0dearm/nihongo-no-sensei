@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { JLPTLevel } from './types';
-import SettingsView from './components/SettingsView';
+import { JLPTLevel } from './models/types';
+import SettingsView from './views/SettingsView';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { ChatHistoryProvider, useChatHistory } from './contexts/ChatHistoryContext';
 import Header from './components/Header';
-import MainContent from './components/MainContent';
+import Main from './components/Main';
+import Layout from './components/Layout';
 
 const AppContent: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -40,25 +41,23 @@ const AppContent: React.FC = () => {
   const closeSettings = () => setIsSettingsOpen(false);
 
   return (
-    <div className="min-h-screen bg-light-bg dark:bg-dark-bg font-sans flex flex-col items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl h-[95vh] max-h-[800px] bg-light-surface dark:bg-dark-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
-        <Header openSettings={openSettings} />
-        <main className="flex-grow flex flex-col min-h-0">
-          <MainContent
-            activeChatId={activeChatId}
-            isCreatingNewChat={isCreatingNewChat}
-            handleSelectChat={handleSelectChat}
-            handleStartNewChat={handleStartNewChat}
-            handleLevelSelect={handleLevelSelect}
-            handleEndChat={handleEndChat}
-            handleBackFromLevelSelect={handleBackFromLevelSelect}
-            initialInstruction={settings.initialInstruction}
-            defaultBlur={settings.defaultBlur}
-          />
-        </main>
-        {isSettingsOpen && <SettingsView onClose={closeSettings} />}
-      </div>
-    </div>
+    <Layout
+      header={<Header openSettings={openSettings} />}
+      main={
+        <Main
+          activeChatId={activeChatId}
+          isCreatingNewChat={isCreatingNewChat}
+          handleSelectChat={handleSelectChat}
+          handleStartNewChat={handleStartNewChat}
+          handleLevelSelect={handleLevelSelect}
+          handleEndChat={handleEndChat}
+          handleBackFromLevelSelect={handleBackFromLevelSelect}
+          initialInstruction={settings.initialInstruction}
+          defaultBlur={settings.defaultBlur}
+        />
+      }
+      settings={isSettingsOpen && <SettingsView onClose={closeSettings} />}
+    />
   );
 };
 

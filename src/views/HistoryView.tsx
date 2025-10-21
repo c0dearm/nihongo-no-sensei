@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-import { PlusIcon } from './icons/PlusIcon';
-import { TrashIcon } from './icons/TrashIcon';
+import { PlusIcon } from '../icons/PlusIcon';
+import { TrashIcon } from '../icons/TrashIcon';
 
 interface HistoryViewProps {
   onSelectChat: (chatId: string) => void;
@@ -17,7 +17,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
     deleteChat(chatId);
     setPendingDeleteId(null);
   };
-  
+
   const handleInitiateDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     setPendingDeleteId(chatId);
@@ -58,37 +58,37 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
                       {new Date(chat.lastUpdatedAt).toLocaleString()}
                     </p>
                     {chat.messages.length > 0 && (
-                        <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1 italic truncate">
-                           "{chat.messages[chat.messages.length - 1].text}"
-                        </p>
+                      <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1 italic truncate">
+                        "{chat.messages[chat.messages.length - 1].text}"
+                      </p>
                     )}
                   </button>
                   <div className="pr-4 pl-2 flex-shrink-0">
                     {pendingDeleteId === chat.id ? (
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={(e) => handleConfirmDelete(e, chat.id)}
-                                className="p-2 text-sm font-semibold text-red-600 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50"
-                                aria-label="Confirm delete"
-                            >
-                                Delete
-                            </button>
-                            <button
-                                onClick={handleCancelDelete}
-                                className="p-2 text-sm font-semibold text-gray-600 dark:text-gray-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
-                                aria-label="Cancel delete"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    ) : (
+                      <div className="flex items-center gap-1">
                         <button
-                            onClick={(e) => handleInitiateDelete(e, chat.id)}
-                            className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                            aria-label="Delete chat"
+                          onClick={(e) => handleConfirmDelete(e, chat.id)}
+                          className="p-2 text-sm font-semibold text-red-600 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50"
+                          aria-label="Confirm delete"
                         >
-                            <TrashIcon className="w-5 h-5" />
+                          Delete
                         </button>
+                        <button
+                          onClick={handleCancelDelete}
+                          className="p-2 text-sm font-semibold text-gray-600 dark:text-gray-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600"
+                          aria-label="Cancel delete"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => handleInitiateDelete(e, chat.id)}
+                        className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        aria-label="Delete chat"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
                     )}
                   </div>
                 </div>

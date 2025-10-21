@@ -1,10 +1,10 @@
 import React from 'react';
-import { JLPTLevel } from '../types';
-import LevelSelector from './LevelSelector';
-import ChatView from './ChatView';
-import HistoryView from './HistoryView';
+import { JLPTLevel } from '../models/types';
+import LevelSelectorView from '../views/LevelSelectorView';
+import ChatView from '../views/ChatView';
+import HistoryView from '../views/HistoryView';
 
-interface MainContentProps {
+interface MainProps {
   activeChatId: string | null;
   isCreatingNewChat: boolean;
   handleSelectChat: (chatId: string) => void;
@@ -16,7 +16,7 @@ interface MainContentProps {
   defaultBlur: boolean;
 }
 
-const MainContent: React.FC<MainContentProps> = ({
+const Main: React.FC<MainProps> = ({
   activeChatId,
   isCreatingNewChat,
   handleSelectChat,
@@ -39,9 +39,9 @@ const MainContent: React.FC<MainContentProps> = ({
     );
   }
   if (isCreatingNewChat) {
-    return <LevelSelector onSelectLevel={handleLevelSelect} onBack={handleBackFromLevelSelect} />;
+    return <LevelSelectorView onSelectLevel={handleLevelSelect} onBack={handleBackFromLevelSelect} />;
   }
   return <HistoryView onSelectChat={handleSelectChat} onStartNewChat={handleStartNewChat} />;
 };
 
-export default MainContent;
+export default Main;

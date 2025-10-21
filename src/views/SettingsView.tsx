@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings, AppSettings, Theme } from '../contexts/SettingsContext';
-import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
+import { ArrowLeftIcon } from '../icons/ArrowLeftIcon';
 
 interface SettingsViewProps {
     onClose: () => void;

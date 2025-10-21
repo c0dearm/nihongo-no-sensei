@@ -1,5 +1,5 @@
 import React from 'react';
-import { GearIcon } from './icons/GearIcon';
+import { GearIcon } from '../icons/GearIcon';
 
 interface HeaderProps {
   openSettings: () => void;

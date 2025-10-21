@@ -47,13 +47,16 @@ The codebase is organized into a clean and maintainable structure, with all sour
 ```
 /
 ├── src/
-│   ├── components/      # Reusable React components
-│   ├── contexts/        # React Context providers
-│   ├── utils/           # Utility functions
+│   ├── components/      # Reusable React components (Header, Layout, Main)
+│   ├── contexts/        # React Context providers (ChatHistory, Settings)
+│   ├── hooks/           # Custom React hooks (useChatConnection)
+│   ├── icons/           # SVG icon components
+│   ├── models/          # TypeScript types and constants
+│   ├── services/        # Audio processing services
+│   ├── views/           # Top-level view components (Chat, History, etc.)
 │   ├── App.tsx          # Main application component
 │   ├── index.tsx        # React app entry point
-│   ├── style.css        # Global styles
-│   └── types.ts         # TypeScript type definitions
+│   └── style.css        # Global styles
 ├── .gitignore
 ├── index.html
 ├── package.json

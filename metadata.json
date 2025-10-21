@@ -1,7 +1,0 @@
-{
-  "name": "日本語の先生 (AI Japanese Teacher)",
-  "description": "An interactive AI-powered Japanese speaking partner to help you achieve fluency. Select your JLPT level and start a real-time conversation with Gemini, receiving live feedback and transcription.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
-}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { JLPTLevel, ChatMessage, ChatSession, ChatId, ChatMessageId } from '../models/types';
 import { createBlob, AudioPlaybackManager, resampleAndEncodeAudio, AudioInputManager } from '../services/audio';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
@@ -33,7 +33,7 @@ export const useGeminiLive = ({ chatId, initialInstruction }: UseGeminiLiveProps
   const [currentInput, setCurrentInput] = useState('');
   const [currentOutput, setCurrentOutput] = useState('');
 
-  const sessionPromiseRef = useRef<Promise<any> | null>(null);
+  const sessionPromiseRef = useRef<Promise<Session> | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
   const audioPlaybackManagerRef = useRef<AudioPlaybackManager | null>(null);
   const audioInputManagerRef = useRef<AudioInputManager | null>(null);
@@ -63,7 +63,8 @@ Keep your responses concise to encourage the student to speak more and be proact
     try {
       const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
-      outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: OUTPUT_SAMPLE_RATE });
+      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
+      outputAudioContextRef.current = new AudioContext({ sampleRate: OUTPUT_SAMPLE_RATE });
       audioPlaybackManagerRef.current = new AudioPlaybackManager(outputAudioContextRef.current);
 
       audioInputManagerRef.current = new AudioInputManager((pcmData) => {

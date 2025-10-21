@@ -95,4 +95,5 @@ Once the installation is complete, you can use the following scripts:
 *   **`npm run dev`**: Starts the development server, will run on `http://localhost:5173`.
 *   **`npm run build`**: Builds the application for production.
 *   **`npm run preview`**: Previews the production build locally.
-*   **`npm run lint`**: Lint the project.
+*   **`npm run lint`**: Lints the project with ESLint.
+*   **`npm run compile`**: Compiles the project using TypeScript. 

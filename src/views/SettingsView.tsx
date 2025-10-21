@@ -22,8 +22,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onClose }) => {
         setTimeout(onClose, 300); // Wait for animation to finish
     };
 
-    const handleChange = (field: keyof AppSettings, value: any) => {
-        setSettings({ ...settings, [field]: value });
+    const handleChange = <K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
+        // Explicitly cast setSettings to allow for the updater function pattern.
+        // This resolves a TS error where the context-provided type might be too narrow.
+        (setSettings as React.Dispatch<React.SetStateAction<AppSettings>>)((prevSettings) => ({ ...prevSettings, [field]: value }));
     };
 
     const themes: { value: Theme; label: string }[] = [

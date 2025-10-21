@@ -116,7 +116,7 @@ export class AudioPlaybackManager {
         for (const source of this.sources) {
             try {
                 source.stop();
-            } catch (e) {
+            } catch {
                 // Ignore errors, e.g. from stopping an already stopped source.
             }
         }
@@ -161,7 +161,8 @@ export class AudioInputManager {
 
         try {
             this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: INPUT_SAMPLE_RATE });
+            const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
+            this.audioContext = new AudioContext({ sampleRate: INPUT_SAMPLE_RATE });
 
             const blob = new Blob([AUDIO_PROCESSOR_CODE], { type: 'application/javascript' });
             const url = URL.createObjectURL(blob);

@@ -44,7 +44,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
         {chatHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-light-text-secondary dark:text-dark-text-secondary">
             <p className="text-lg">No chats yet.</p>
-            <p>Click "Start New Chat" to begin!</p>
+            <p>Click &quot;Start New Chat&quot; to begin!</p>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -60,7 +60,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
                     </p>
                     {chat.messages.length > 0 && (
                       <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1 italic truncate">
-                        "{chat.messages[chat.messages.length - 1].text}"
+                        &quot;{chat.messages[chat.messages.length - 1].text}&quot;
                       </p>
                     )}
                   </button>

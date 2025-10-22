@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSettings, AppSettings, Theme } from '../contexts/SettingsContext';
+import { useSettings } from '../hooks/useSettings';
+import { AppSettings, Theme } from '../providers/SettingsProvider';
 import { ArrowLeftIcon } from '../icons/ArrowLeftIcon';
 
 interface SettingsViewProps {

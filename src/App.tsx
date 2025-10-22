@@ -1,8 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { JLPTLevel, ChatId } from './models/types';
 import SettingsView from './views/SettingsView';
-import { SettingsProvider, useSettings } from './contexts/SettingsContext';
-import { ChatHistoryProvider, useChatHistory } from './contexts/ChatHistoryContext';
+import { SettingsProvider } from './providers/SettingsProvider';
+import { useSettings } from './hooks/useSettings';
+import { ChatHistoryProvider } from './providers/ChatHistoryProvider';
+import { useChatHistory } from './hooks/useChatHistory';
 import Header from './components/Header';
 import Main from './components/Main';
 import Layout from './components/Layout';

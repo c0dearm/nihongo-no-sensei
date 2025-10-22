@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { SettingsContext } from '../contexts/SettingsContext';
 
 export type Theme = 'system' | 'light' | 'dark';
 
@@ -8,18 +9,11 @@ export interface AppSettings {
   defaultBlur: boolean;
 }
 
-interface SettingsContextType {
-  settings: AppSettings;
-  setSettings: (settings: AppSettings) => void;
-}
-
 const defaultSettings: AppSettings = {
   theme: 'system',
   initialInstruction: 'こんにちは',
   defaultBlur: false,
 };
-
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettingsState] = useState<AppSettings>(() => {
@@ -70,12 +64,4 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       {children}
     </SettingsContext.Provider>
   );
-};
-
-export const useSettings = (): SettingsContextType => {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error('useSettings must be used within a SettingsProvider');
-  }
-  return context;
 };

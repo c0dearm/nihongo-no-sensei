@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGeminiLive, ConnectionState } from '../hooks/useGeminiLive';
-import { useChatHistory } from '../contexts/ChatHistoryContext';
+import { useChatHistory } from '../hooks/useChatHistory';
 import { ChatMessage, ChatId } from '../models/types';
 import { MicrophoneIcon } from '../icons/MicrophoneIcon';
 import { EyeIcon } from '../icons/EyeIcon';

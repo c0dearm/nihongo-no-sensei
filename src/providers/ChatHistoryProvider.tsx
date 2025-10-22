@@ -1,17 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import { ChatSession, JLPTLevel, ChatMessage, ChatId } from '../models/types';
+import { ChatHistoryContext } from '../contexts/ChatHistoryContext';
 
 const CHAT_HISTORY_KEY = 'chat-history';
-
-interface ChatHistoryContextType {
-  chatHistory: ChatSession[];
-  startNewChat: (level: JLPTLevel) => ChatSession;
-  updateChatMessages: (chatId: ChatId, messages: ChatMessage[]) => void;
-  deleteChat: (chatId: ChatId) => void;
-  getChat: (chatId: ChatId) => ChatSession | undefined;
-}
-
-const ChatHistoryContext = createContext<ChatHistoryContextType | undefined>(undefined);
 
 export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [chatHistory, setChatHistory] = useState<ChatSession[]>(() => {
@@ -47,16 +38,16 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const updateChatMessages = useCallback((chatId: ChatId, messages: ChatMessage[]) => {
     setChatHistory(prev => {
-        const now = Date.now();
-        const updatedHistory = prev.map(chat =>
-            chat.id === chatId ? { ...chat, messages, lastUpdatedAt: now } : chat
-        );
-        const chatIndex = updatedHistory.findIndex(chat => chat.id === chatId);
-        if (chatIndex > 0) {
-            const [chatToMove] = updatedHistory.splice(chatIndex, 1);
-            updatedHistory.unshift(chatToMove);
-        }
-        return updatedHistory;
+      const now = Date.now();
+      const updatedHistory = prev.map(chat =>
+        chat.id === chatId ? { ...chat, messages, lastUpdatedAt: now } : chat
+      );
+      const chatIndex = updatedHistory.findIndex(chat => chat.id === chatId);
+      if (chatIndex > 0) {
+        const [chatToMove] = updatedHistory.splice(chatIndex, 1);
+        updatedHistory.unshift(chatToMove);
+      }
+      return updatedHistory;
     });
   }, []);
 
@@ -74,12 +65,4 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
       {children}
     </ChatHistoryContext.Provider>
   );
-};
-
-export const useChatHistory = (): ChatHistoryContextType => {
-  const context = useContext(ChatHistoryContext);
-  if (!context) {
-    throw new Error('useChatHistory must be used within a ChatHistoryProvider');
-  }
-  return context;
 };

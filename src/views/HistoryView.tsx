@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useChatHistory } from '../contexts/ChatHistoryContext';
+import { useChatHistory } from '../hooks/useChatHistory';
 import { PlusIcon } from '../icons/PlusIcon';
 import { TrashIcon } from '../icons/TrashIcon';
 import { ChatId } from '../models/types';

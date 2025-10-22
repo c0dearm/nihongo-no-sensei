@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { JLPTLevel, ChatMessage, ChatSession, ChatId, ChatMessageId } from '../models/types';
 import { createBlob, AudioPlaybackManager, resampleAndEncodeAudio, AudioInputManager } from '../services/audio';
-import { useChatHistory } from '../contexts/ChatHistoryContext';
+import { useChatHistory } from './useChatHistory';
 import {
   TTS_MODEL,
   LIVE_SESSION_MODEL,

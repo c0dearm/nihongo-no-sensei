@@ -1,17 +1,17 @@
 {
-    "name": "日本語の先生",
-    "start_url": "/",
-    "display": "standalone",
-    "icons": [
-        {
-            "src": "icon.svg",
-            "type": "image/svg+xml",
-            "sizes": "192x192"
-        },
-        {
-            "src": "icon.svg",
-            "type": "image/svg+xml",
-            "sizes": "512x512"
-        }
-    ]
+  "name": "日本語の先生",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ]
 }

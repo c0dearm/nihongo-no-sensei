@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import { useChatHistory } from '../hooks/useChatHistory';
-import { PlusIcon } from '../icons/PlusIcon';
-import { TrashIcon } from '../icons/TrashIcon';
-import { ChatId } from '../models/types';
+import React, { useState } from "react";
+import { useChatHistory } from "../hooks/useChatHistory";
+import { PlusIcon } from "../icons/PlusIcon";
+import { TrashIcon } from "../icons/TrashIcon";
+import { ChatId } from "../models/types";
 
 interface HistoryViewProps {
   onSelectChat: (chatId: ChatId) => void;
   onStartNewChat: () => void;
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({
+  onSelectChat,
+  onStartNewChat,
+}) => {
   const { chatHistory, deleteChat } = useChatHistory();
   const [pendingDeleteId, setPendingDeleteId] = useState<ChatId | null>(null);
 
@@ -22,12 +25,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
   const handleInitiateDelete = (e: React.MouseEvent, chatId: ChatId) => {
     e.stopPropagation();
     setPendingDeleteId(chatId);
-  }
+  };
 
   const handleCancelDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     setPendingDeleteId(null);
-  }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -50,17 +53,21 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onSelectChat, onStartNewChat 
           <ul className="space-y-3">
             {chatHistory.map((chat) => (
               <li key={chat.id}>
-                <div
-                  className="w-full text-left bg-light-bg dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex justify-between items-center group"
-                >
-                  <button onClick={() => onSelectChat(chat.id)} className="flex-grow p-4 overflow-hidden text-left">
-                    <p className="font-bold text-light-text dark:text-dark-text">{chat.jlptLevel} Conversation</p>
+                <div className="w-full text-left bg-light-bg dark:bg-dark-bg rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex justify-between items-center group">
+                  <button
+                    onClick={() => onSelectChat(chat.id)}
+                    className="flex-grow p-4 overflow-hidden text-left"
+                  >
+                    <p className="font-bold text-light-text dark:text-dark-text">
+                      {chat.jlptLevel} Conversation
+                    </p>
                     <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
                       {new Date(chat.lastUpdatedAt).toLocaleString()}
                     </p>
                     {chat.messages.length > 0 && (
                       <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mt-1 italic truncate">
-                        &quot;{chat.messages[chat.messages.length - 1].text}&quot;
+                        &quot;{chat.messages[chat.messages.length - 1].text}
+                        &quot;
                       </p>
                     )}
                   </button>

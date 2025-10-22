@@ -1,8 +1,8 @@
-import React from 'react';
-import { JLPTLevel, ChatId } from '../models/types';
-import LevelSelectorView from '../views/LevelSelectorView';
-import ChatView from '../views/ChatView';
-import HistoryView from '../views/HistoryView';
+import React from "react";
+import { JLPTLevel, ChatId } from "../models/types";
+import LevelSelectorView from "../views/LevelSelectorView";
+import ChatView from "../views/ChatView";
+import HistoryView from "../views/HistoryView";
 
 interface MainProps {
   activeChatId: ChatId | null;
@@ -14,6 +14,7 @@ interface MainProps {
   handleBackFromLevelSelect: () => void;
   initialInstruction: string;
   defaultBlur: boolean;
+  geminiApiKey: string;
 }
 
 const Main: React.FC<MainProps> = ({
@@ -26,6 +27,7 @@ const Main: React.FC<MainProps> = ({
   handleBackFromLevelSelect,
   initialInstruction,
   defaultBlur,
+  geminiApiKey,
 }) => {
   if (activeChatId) {
     return (
@@ -35,13 +37,24 @@ const Main: React.FC<MainProps> = ({
         onEndChat={handleEndChat}
         initialInstruction={initialInstruction}
         defaultBlur={defaultBlur}
+        geminiApiKey={geminiApiKey}
       />
     );
   }
   if (isCreatingNewChat) {
-    return <LevelSelectorView onSelectLevel={handleLevelSelect} onBack={handleBackFromLevelSelect} />;
+    return (
+      <LevelSelectorView
+        onSelectLevel={handleLevelSelect}
+        onBack={handleBackFromLevelSelect}
+      />
+    );
   }
-  return <HistoryView onSelectChat={handleSelectChat} onStartNewChat={handleStartNewChat} />;
+  return (
+    <HistoryView
+      onSelectChat={handleSelectChat}
+      onStartNewChat={handleStartNewChat}
+    />
+  );
 };
 
 export default Main;

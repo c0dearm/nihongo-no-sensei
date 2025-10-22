@@ -1,4 +1,4 @@
-# 日本語の先生 (Japanese Teacher)
+# 日本語の先生
 
 An interactive AI-powered Japanese speaking partner designed to help you achieve fluency. Select your JLPT level and start a real-time, low-latency conversation with Google's Gemini model, receiving live feedback and transcription to practice your listening and speaking skills.
 
@@ -6,28 +6,28 @@ An interactive AI-powered Japanese speaking partner designed to help you achieve
 
 ## ✨ Key Features
 
-*   **Real-time AI Conversation**: Engage in natural, spoken conversations with an AI tutor powered by the Gemini Live API.
-*   **JLPT Level Selection**: Tailor the conversation's difficulty by choosing a Japanese-Language Proficiency Test (JLPT) level from N5 (beginner) to N1 (advanced).
-*   **Live Transcription**: See a real-time transcription of both your speech and the AI's responses.
-*   **Listening Practice Mode**: Blur the conversation text to focus solely on your listening comprehension skills. You can toggle the blur at any time.
-*   **Chat History**: All your practice sessions are saved, allowing you to review past conversations and track your progress.
-*   **Customizable Experience**:
-    *   Choose between Light, Dark, or System default themes.
-    *   Set a custom "initial instruction" to start each new conversation.
-    *   Set the default state for blurring messages.
-*   **Responsive Design**: A clean, modern, and responsive UI that works beautifully on any device.
+- **Real-time AI Conversation**: Engage in natural, spoken conversations with an AI tutor powered by the Gemini Live API.
+- **JLPT Level Selection**: Tailor the conversation's difficulty by choosing a Japanese-Language Proficiency Test (JLPT) level from N5 (beginner) to N1 (advanced).
+- **Live Transcription**: See a real-time transcription of both your speech and the AI's responses.
+- **Listening Practice Mode**: Blur the conversation text to focus solely on your listening comprehension skills. You can toggle the blur at any time.
+- **Chat History**: All your practice sessions are saved, allowing you to review past conversations and track your progress.
+- **Customizable Experience**:
+  - Choose between Light, Dark, or System default themes.
+  - Set a custom "initial instruction" to start each new conversation.
+  - Set the default state for blurring messages.
+- **Responsive Design**: A clean, modern, and responsive UI that works beautifully on any device.
 
 ## 🚀 How It Works
 
 This application leverages the power of Google's Gemini API to create a seamless and interactive language-learning experience.
 
-*   **Core Technology**: The app is built with **React** and **TypeScript**.
-*   **AI Interaction**:
-    *   The real-time conversation is handled by **`gemini-2.5-flash-native-audio-preview-09-2025`** using the **Live API**. This enables a low-latency, audio-in/audio-out stream for a fluid speaking experience.
-    *   The initial greeting from the teacher is generated using the **`gemini-2.5-flash-preview-tts`** model.
-*   **Audio Processing**: The browser's **Web Audio API** (`AudioContext`, `AudioWorklet`) is used to capture microphone input, process it into the required PCM format, and play back the AI's audio response without gaps or delays.
-*   **State Management**: React's Context API is used to manage global state for user settings and chat history.
-*   **Local Persistence**: Your settings and chat history are saved directly in your browser using `localStorage`.
+- **Core Technology**: The app is built with **React** and **TypeScript**.
+- **AI Interaction**:
+  - The real-time conversation is handled by **`gemini-2.5-flash-native-audio-preview-09-2025`** using the **Live API**. This enables a low-latency, audio-in/audio-out stream for a fluid speaking experience.
+  - The initial greeting from the teacher is generated using the **`gemini-2.5-flash-preview-tts`** model.
+- **Audio Processing**: The browser's **Web Audio API** (`AudioContext`, `AudioWorklet`) is used to capture microphone input, process it into the required PCM format, and play back the AI's audio response without gaps or delays.
+- **State Management**: React's Context API is used to manage global state for user settings and chat history.
+- **Local Persistence**: Your settings and chat history are saved directly in your browser using `localStorage`.
 
 ## 💻 How to Use the App
 
@@ -47,43 +47,41 @@ The codebase is organized into a clean and maintainable structure, with all sour
 ```
 /
 ├── src/
-│   ├── components/      # Reusable React components (Header, Layout, Main)
-│   ├── contexts/        # React Context providers (ChatHistory, Settings)
-│   ├── hooks/           # Custom React hooks (useGeminiLive)
-│   ├── icons/           # SVG icon components
-│   ├── models/          # TypeScript types and constants
-│   ├── services/        # Audio processing services
-│   ├── views/           # Top-level view components (Chat, History, etc.)
-│   ├── App.tsx          # Main application component
-│   ├── index.tsx        # React app entry point
-│   └── style.css        # Global styles
-├── .gitignore
-├── index.html
-├── package.json
-├── README.md
-└── vite.config.ts
+│   ├── components/     # Reusable React components (Header, Layout, Main)
+│   ├── contexts/       # React Context providers (ChatHistory, Settings)
+│   ├── hooks/          # Custom React hooks (useChatHistory, useGeminiLive, useSettings)
+│   ├── icons/          # SVG icon components (Arrow, Eye, Gear, Microphone, etc.)
+│   ├── models/         # TypeScript types and constants
+│   ├── providers/      # React Context providers implementation
+│   ├── services/       # Audio processing services
+│   ├── views/          # Top-level view components (Chat, History, Settings, etc.)
+│   ├── App.tsx         # Main application component
+│   ├── index.tsx       # React app entry point
+│   └── style.css       # Global styles
+├── eslint.config.ts    # ESLint configuration
+├── firebase.json       # Firebase configuration
+├── index.html          # Application entry point
+├── manifest.json       # Web app manifest
+├── package.json        # Project dependencies and scripts
+├── README.md           # Project documentation
+├── tsconfig.json       # TypeScript configuration
+└── vite.config.ts      # Vite bundler configuration
 ```
 
 ## 💻 Running Locally
 
-To run this application on your local machine for development, you'll need Node.js and a package manager like npm.
+To run this application on your local machine for development, you'll need npm.
 
 **1. Prerequisites**
 
-*   [Node.js](https://nodejs.org/) (version 18 or newer is recommended)
-*   A package manager like [npm](https://www.npmjs.com/)
-*   A Google Gemini API key. You can obtain one from [Google AI Studio](https://aistudio.google.com/).
+- [npm](https://www.npmjs.com/)
+- [firebase](https://firebase.google.com/)
 
 **2. Setup & Installation**
 
 1.  **Clone the repository** (or download the source code).
 
-2.  **Provide Your API Key:** Create a file named `.env` in the root of the project folder. **This file should not be committed to version control.** Add your API key to this file:
-    ```
-    VITE_GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-    ```
-
-3.  **Install dependencies:** Open your terminal in the project root and run:
+2.  **Install dependencies:** Open your terminal in the project root and run:
     ```bash
     npm install
     ```
@@ -92,8 +90,25 @@ To run this application on your local machine for development, you'll need Node.
 
 Once the installation is complete, you can use the following scripts:
 
-*   **`npm run dev`**: Starts the development server, will run on `http://localhost:5173`.
-*   **`npm run build`**: Builds the application for production.
-*   **`npm run preview`**: Previews the production build locally.
-*   **`npm run lint`**: Lints the project with ESLint.
-*   **`npm run compile`**: Compiles the project using TypeScript. 
+- **`npm run dev`**: Starts the development server on `http://localhost:5173`.
+- **`npm run build`**: Builds the application for production.
+- **`npm run preview`**: Previews the production build locally.
+- **`npm run format`**: Formats the code using Prettier.
+- **`npm run lint`**: Lints the project with ESLint.
+- **`npm run type-check`**: Compiles the project using TypeScript.
+
+## ⚡ Deploying
+
+The project is setup to be deployed automatically to Firebase using GitHub actions,
+however if a manual deployment is needed, you can follow these two steps, assuming you already completed the [Firebase client setup](https://firebase.google.com/docs/hosting/quickstart):
+
+1.  **Build the static files**
+
+    ```bash
+    npm run build
+    ```
+
+2.  **Host in Firebase**:
+    ```bash
+    firebase deploy --only hosting
+    ```

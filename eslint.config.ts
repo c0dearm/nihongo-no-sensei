@@ -1,17 +1,16 @@
-
-import typescriptParser from '@typescript-eslint/parser';
-import typescriptPlugin from '@typescript-eslint/eslint-plugin';
-import reactPlugin from 'eslint-plugin-react';
-import hooksPlugin from 'eslint-plugin-react-hooks';
-import refreshPlugin from 'eslint-plugin-react-refresh';
+import typescriptParser from "@typescript-eslint/parser";
+import typescriptPlugin from "@typescript-eslint/eslint-plugin";
+import reactPlugin from "eslint-plugin-react";
+import hooksPlugin from "eslint-plugin-react-hooks";
+import refreshPlugin from "eslint-plugin-react-refresh";
 
 export default [
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: "./tsconfig.json",
       },
       globals: {
         browser: true,
@@ -19,21 +18,21 @@ export default [
       },
     },
     plugins: {
-      '@typescript-eslint': typescriptPlugin,
+      "@typescript-eslint": typescriptPlugin,
       react: reactPlugin,
-      'react-hooks': hooksPlugin,
-      'react-refresh': refreshPlugin,
+      "react-hooks": hooksPlugin,
+      "react-refresh": refreshPlugin,
     },
     rules: {
       ...typescriptPlugin.configs.recommended.rules,
       ...reactPlugin.configs.recommended.rules,
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-refresh/only-export-components': 'warn',
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-refresh/only-export-components": "warn",
     },
     settings: {
       react: {
-        version: 'detect',
+        version: "detect",
       },
     },
   },

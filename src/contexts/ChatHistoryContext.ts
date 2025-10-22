@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { ChatSession, JLPTLevel, ChatMessage, ChatId } from '../models/types';
+import { createContext } from "react";
+import { ChatSession, JLPTLevel, ChatMessage, ChatId } from "../models/types";
 
 export interface ChatHistoryContextType {
   chatHistory: ChatSession[];
@@ -9,4 +9,6 @@ export interface ChatHistoryContextType {
   getChat: (chatId: ChatId) => ChatSession | undefined;
 }
 
-export const ChatHistoryContext = createContext<ChatHistoryContextType | undefined>(undefined);
+export const ChatHistoryContext = createContext<
+  ChatHistoryContextType | undefined
+>(undefined);

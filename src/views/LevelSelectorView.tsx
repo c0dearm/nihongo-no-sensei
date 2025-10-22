@@ -1,25 +1,42 @@
-import React from 'react';
-import { JLPTLevel } from '../models/types';
-import { ArrowLeftIcon } from '../icons/ArrowLeftIcon';
+import React from "react";
+import { JLPTLevel } from "../models/types";
+import { ArrowLeftIcon } from "../icons/ArrowLeftIcon";
 
 interface LevelSelectorProps {
   onSelectLevel: (level: JLPTLevel) => void;
   onBack: () => void;
 }
 
-const LevelSelectorView: React.FC<LevelSelectorProps> = ({ onSelectLevel, onBack }) => {
-  const levels = [JLPTLevel.N5, JLPTLevel.N4, JLPTLevel.N3, JLPTLevel.N2, JLPTLevel.N1];
+const LevelSelectorView: React.FC<LevelSelectorProps> = ({
+  onSelectLevel,
+  onBack,
+}) => {
+  const levels = [
+    JLPTLevel.N5,
+    JLPTLevel.N4,
+    JLPTLevel.N3,
+    JLPTLevel.N2,
+    JLPTLevel.N1,
+  ];
 
   return (
     <div className="flex flex-col h-full">
       <header className="p-4 flex items-center relative flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
-        <button onClick={onBack} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-2 absolute left-4" aria-label="Go back">
+        <button
+          onClick={onBack}
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-2 absolute left-4"
+          aria-label="Go back"
+        >
           <ArrowLeftIcon className="w-6 h-6 text-light-text-secondary dark:text-dark-text-secondary" />
         </button>
-        <h2 className="text-xl font-bold text-center flex-grow text-light-text dark:text-white">New Chat</h2>
+        <h2 className="text-xl font-bold text-center flex-grow text-light-text dark:text-white">
+          New Chat
+        </h2>
       </header>
       <div className="flex flex-col items-center justify-center flex-grow p-8 text-center">
-        <p className="mb-8 text-light-text-secondary dark:text-dark-text-secondary">Please select a JLPT level to begin.</p>
+        <p className="mb-8 text-light-text-secondary dark:text-dark-text-secondary">
+          Please select a JLPT level to begin.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-md">
           {levels.map((level) => (
             <button

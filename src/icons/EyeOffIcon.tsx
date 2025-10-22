@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export const EyeOffIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg

@@ -1,16 +1,18 @@
-import React, { useState, useEffect, ReactNode, useCallback } from 'react';
-import { ChatSession, JLPTLevel, ChatMessage, ChatId } from '../models/types';
-import { ChatHistoryContext } from '../contexts/ChatHistoryContext';
+import React, { useState, useEffect, ReactNode, useCallback } from "react";
+import { ChatSession, JLPTLevel, ChatMessage, ChatId } from "../models/types";
+import { ChatHistoryContext } from "../contexts/ChatHistoryContext";
 
-const CHAT_HISTORY_KEY = 'chat-history';
+const CHAT_HISTORY_KEY = "chat-history";
 
-export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [chatHistory, setChatHistory] = useState<ChatSession[]>(() => {
     try {
       const storedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
       return storedHistory ? JSON.parse(storedHistory) : [];
     } catch (error) {
-      console.error('Error reading chat history from localStorage', error);
+      console.error("Error reading chat history from localStorage", error);
       return [];
     }
   });
@@ -19,7 +21,7 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
     } catch (error) {
-      console.error('Error saving chat history to localStorage', error);
+      console.error("Error saving chat history to localStorage", error);
     }
   }, [chatHistory]);
 
@@ -32,36 +34,51 @@ export const ChatHistoryProvider: React.FC<{ children: ReactNode }> = ({ childre
       createdAt: now,
       lastUpdatedAt: now,
     };
-    setChatHistory(prev => [newChat, ...prev]);
+    setChatHistory((prev) => [newChat, ...prev]);
     return newChat;
   }, []);
 
-  const updateChatMessages = useCallback((chatId: ChatId, messages: ChatMessage[]) => {
-    setChatHistory(prev => {
-      const now = Date.now();
-      const updatedHistory = prev.map(chat =>
-        chat.id === chatId ? { ...chat, messages, lastUpdatedAt: now } : chat
-      );
-      const chatIndex = updatedHistory.findIndex(chat => chat.id === chatId);
-      if (chatIndex > 0) {
-        const [chatToMove] = updatedHistory.splice(chatIndex, 1);
-        updatedHistory.unshift(chatToMove);
-      }
-      return updatedHistory;
-    });
-  }, []);
+  const updateChatMessages = useCallback(
+    (chatId: ChatId, messages: ChatMessage[]) => {
+      setChatHistory((prev) => {
+        const now = Date.now();
+        const updatedHistory = prev.map((chat) =>
+          chat.id === chatId ? { ...chat, messages, lastUpdatedAt: now } : chat,
+        );
+        const chatIndex = updatedHistory.findIndex(
+          (chat) => chat.id === chatId,
+        );
+        if (chatIndex > 0) {
+          const [chatToMove] = updatedHistory.splice(chatIndex, 1);
+          updatedHistory.unshift(chatToMove);
+        }
+        return updatedHistory;
+      });
+    },
+    [],
+  );
 
   const deleteChat = useCallback((chatId: ChatId) => {
-    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+    setChatHistory((prev) => prev.filter((chat) => chat.id !== chatId));
   }, []);
 
-  const getChat = useCallback((chatId: ChatId): ChatSession | undefined => {
-    return chatHistory.find(chat => chat.id === chatId);
-  }, [chatHistory]);
-
+  const getChat = useCallback(
+    (chatId: ChatId): ChatSession | undefined => {
+      return chatHistory.find((chat) => chat.id === chatId);
+    },
+    [chatHistory],
+  );
 
   return (
-    <ChatHistoryContext.Provider value={{ chatHistory, startNewChat, updateChatMessages, deleteChat, getChat }}>
+    <ChatHistoryContext.Provider
+      value={{
+        chatHistory,
+        startNewChat,
+        updateChatMessages,
+        deleteChat,
+        getChat,
+      }}
+    >
       {children}
     </ChatHistoryContext.Provider>
   );

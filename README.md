@@ -53,6 +53,7 @@ The codebase is organized into a clean and maintainable structure, with all sour
 │   ├── icons/          # SVG icon components (Arrow, Eye, Gear, Microphone, etc.)
 │   ├── models/         # TypeScript types and constants
 │   ├── providers/      # React Context providers implementation
+│   ├── sounds/         # Sound files for different purposes
 │   ├── utils/          # Audio processing classes and other utilities (Microphone, Audio)
 │   ├── views/          # Top-level view components (Chat, History, Settings, etc.)
 │   ├── App.tsx         # Main application component

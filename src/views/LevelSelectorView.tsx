@@ -1,5 +1,5 @@
 import React from "react";
-import { JLPTLevel } from "../models/types";
+import { JLPTLevel } from "../utils/types";
 import { ArrowLeftIcon } from "../icons/ArrowLeftIcon";
 
 interface LevelSelectorProps {

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { JLPTLevel, ChatId } from "./models/types";
+import { JLPTLevel, ChatId } from "./utils/types";
 import SettingsView from "./views/SettingsView";
 import { SettingsProvider } from "./providers/SettingsProvider";
 import { useSettings } from "./hooks/useSettings";

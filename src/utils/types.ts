@@ -11,7 +11,7 @@ export enum JLPTLevel {
 
 export interface ChatMessage {
   id: ChatMessageId;
-  sender: "user" | "ai";
+  sender: "student" | "teacher";
   text: string;
 }
 

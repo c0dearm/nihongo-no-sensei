@@ -5,7 +5,12 @@ import {
   Modality,
   Session,
 } from "@google/genai";
-import { ChatMessage, ChatId, ChatMessageId } from "../models/types";
+import {
+  ChatMessage,
+  ChatId,
+  ChatMessageId,
+  ChatSession,
+} from "../utils/types";
 import { useChatHistory } from "./useChatHistory";
 import MicrophoneStreamer from "../utils/MicrophoneStreamer";
 import PcmPlayer from "../utils/PcmPlayer";
@@ -37,6 +42,29 @@ const toBlob = (pcmAudio: ArrayBuffer) => {
   };
 };
 
+// Provides the appropriate context to the Gemini model
+const getContext = (
+  chatSession: ChatSession,
+  initialInstruction: string,
+): string => {
+  const context = `
+    You are a friendly and patient Japanese teacher, 日本語の先生. Your student's level is JLPT ${chatSession.jlptLevel}.
+    Your goal is to help the student become fluent in spoken Japanese through conversation, by following these rules:
+      * You must maintain the conversation using vocabulary, grammar, and topics suitable for the student's level.
+      * Speak clearly and at a natural, but not overly fast, pace.
+      * If the student makes a significant grammatical or vocabulary error, gently provide a correction.
+      * Keep your responses concise to encourage the student to speak more.
+      * Be proactive providing topics of conversation to keep the conversation going.
+      * Both the student and yourself must talk in Japanese all the time (immersion learning).
+    `;
+
+  if (chatSession.messages.length === 0) {
+    return `${context}\n${initialInstruction}`;
+  } else {
+    return `${context}\nUp to now you have had this conversation with the student:\n${chatSession.messages}`;
+  }
+};
+
 export const useGeminiLive = ({
   chatId,
   initialInstruction,
@@ -48,10 +76,8 @@ export const useGeminiLive = ({
   const [currentInput, setCurrentInput] = useState<string>("");
   const [currentOutput, setCurrentOutput] = useState<string>("");
   const { getChat, updateChatMessages } = useChatHistory();
-  const chatSession = getChat(chatId);
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    chatSession?.messages || [],
-  );
+  const chatSession = getChat(chatId) as ChatSession;
+  const [messages, setMessages] = useState<ChatMessage[]>(chatSession.messages);
 
   const sessionPromiseRef = useRef<Promise<Session> | null>(null);
   const micStreamerRef = useRef<MicrophoneStreamer | null>(null);
@@ -69,7 +95,7 @@ export const useGeminiLive = ({
         speechConfig: {
           voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
         },
-        systemInstruction: initialInstruction || "こんにちは",
+        systemInstruction: getContext(chatSession, initialInstruction),
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
         outputAudioTranscription: {},
@@ -111,15 +137,15 @@ export const useGeminiLive = ({
               let newMessages = [...prevMessages];
               if (finalInput) {
                 newMessages.push({
-                  id: `user-${Date.now()}` as ChatMessageId,
-                  sender: "user",
+                  id: `student-${Date.now()}` as ChatMessageId,
+                  sender: "student",
                   text: finalInput,
                 });
               }
               if (finalOutput) {
                 newMessages.push({
-                  id: `ai-${Date.now()}` as ChatMessageId,
-                  sender: "ai",
+                  id: `teacher-${Date.now()}` as ChatMessageId,
+                  sender: "teacher",
                   text: finalOutput,
                 });
               }
@@ -194,7 +220,13 @@ export const useGeminiLive = ({
       });
       sessionPromiseRef.current = null;
     };
-  }, [geminiApiKey, initialInstruction, chatId, updateChatMessages]);
+  }, [
+    geminiApiKey,
+    initialInstruction,
+    chatId,
+    updateChatMessages,
+    chatSession,
+  ]);
 
   return { messages, connectionState, currentInput, currentOutput };
 };

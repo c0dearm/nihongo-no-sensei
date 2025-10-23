@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGeminiLive, ConnectionState } from "../hooks/useGeminiLive";
 import { useChatHistory } from "../hooks/useChatHistory";
-import { ChatMessage, ChatId } from "../models/types";
+import { ChatMessage, ChatId } from "../utils/types";
 import { MicrophoneIcon } from "../icons/MicrophoneIcon";
 import { EyeIcon } from "../icons/EyeIcon";
 import { EyeOffIcon } from "../icons/EyeOffIcon";
@@ -53,10 +53,10 @@ const ChatView: React.FC<ChatViewProps> = ({
   const renderMessage = (msg: ChatMessage) => (
     <div
       key={msg.id}
-      className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-4`}
+      className={`flex ${msg.sender === "student" ? "justify-end" : "justify-start"} mb-4`}
     >
       <div
-        className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.sender === "user" ? "bg-primary text-white rounded-br-none" : "bg-gray-100 text-light-text dark:bg-gray-700 dark:text-dark-text rounded-bl-none"}`}
+        className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.sender === "student" ? "bg-primary text-white rounded-br-none" : "bg-gray-100 text-light-text dark:bg-gray-700 dark:text-dark-text rounded-bl-none"}`}
       >
         <p
           className={`transition-all duration-300 ${isBlurred ? "blur-xs select-none" : ""}`}

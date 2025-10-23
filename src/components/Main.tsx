@@ -1,5 +1,5 @@
 import React from "react";
-import { JLPTLevel, ChatId } from "../models/types";
+import { JLPTLevel, ChatId } from "../utils/types";
 import LevelSelectorView from "../views/LevelSelectorView";
 import ChatView from "../views/ChatView";
 import HistoryView from "../views/HistoryView";

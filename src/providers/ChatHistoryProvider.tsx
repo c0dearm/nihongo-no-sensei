@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ReactNode, useCallback } from "react";
-import { ChatSession, JLPTLevel, ChatMessage, ChatId } from "../models/types";
+import { ChatSession, JLPTLevel, ChatMessage, ChatId } from "../utils/types";
 import { ChatHistoryContext } from "../contexts/ChatHistoryContext";
 
 const CHAT_HISTORY_KEY = "chat-history";

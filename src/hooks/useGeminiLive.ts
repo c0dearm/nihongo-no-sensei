@@ -5,6 +5,7 @@ import {
   Modality,
   Session,
 } from "@google/genai";
+import konnichiwa from "../sounds/konnichiwa.mp3";
 import {
   ChatMessage,
   ChatId,
@@ -14,6 +15,7 @@ import {
 import { useChatHistory } from "./useChatHistory";
 import MicrophoneStreamer from "../utils/MicrophoneStreamer";
 import PcmPlayer from "../utils/PcmPlayer";
+import toPCM from "../utils/audio";
 
 export enum ConnectionState {
   IDLE,
@@ -29,7 +31,7 @@ interface UseGeminiLiveProps {
   geminiApiKey: string;
 }
 
-// Transforms 16 bit PCM little endian audio into a MediaBlob
+// Transforms 16 bit PCM little endian audio data into a MediaBlob
 const toBlob = (pcmAudio: ArrayBuffer) => {
   const view = new Uint8Array(pcmAudio);
   let data = "";
@@ -87,7 +89,7 @@ export const useGeminiLive = ({
 
   useEffect(() => {
     setConnectionState(ConnectionState.CONNECTING);
-    const client = new GoogleGenAI({ apiKey: geminiApiKey });
+    const client = new GoogleGenAI({ apiKey: geminiApiKey, httpOptions: { "apiVersion": "v1alpha" } });
 
     sessionPromiseRef.current = client.live.connect({
       model: "gemini-2.5-flash-native-audio-preview-09-2025",
@@ -105,15 +107,23 @@ export const useGeminiLive = ({
       callbacks: {
         onopen: async () => {
           setConnectionState(ConnectionState.CONNECTED);
+
+          // Setup microphone and speakers
           pcmPlayerRef.current = new PcmPlayer();
           micStreamerRef.current = new MicrophoneStreamer((audio) => {
             sessionPromiseRef.current?.then((session) =>
               session.sendRealtimeInput({ media: toBlob(audio) }),
             );
           });
-
           await pcmPlayerRef.current?.start();
           await micStreamerRef.current?.start();
+
+          // Send trigger word to kickstart the conversation
+          toPCM(konnichiwa).then((audio) => {
+            sessionPromiseRef.current?.then((session) =>
+              session.sendRealtimeInput({ media: toBlob(audio) }),
+            );
+          });
         },
         onmessage: async (message: LiveServerMessage) => {
           // Handle Input Transcription

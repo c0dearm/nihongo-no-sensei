@@ -249,6 +249,8 @@ export const useGeminiLive = ({
       });
       sessionPromiseRef.current = null;
     };
+    // FIX: If we set chatSession as dependency here, it breaks the flow because
+    // the UI is re-rendered on new messages and the websocket gets recreated
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geminiApiKey, initialInstruction, chatId]);
 

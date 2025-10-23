@@ -92,7 +92,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                     ) : (
                       <button
                         onClick={(e) => handleInitiateDelete(e, chat.id)}
-                        className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400 transition-colors"
                         aria-label="Delete chat"
                       >
                         <TrashIcon className="w-5 h-5" />

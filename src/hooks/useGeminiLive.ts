@@ -204,16 +204,17 @@ export const useGeminiLive = ({
 
           // Handle Interruption
           if (message.serverContent?.interrupted) {
-            pcmPlayerRef.current?.stop();
+            await pcmPlayerRef.current?.stop();
+            await pcmPlayerRef.current?.start();
           }
         },
-        onclose: (event: CloseEvent) => {
+        onclose: async (event: CloseEvent) => {
           if (event.reason) {
             console.error("Session closed:", event.reason);
           }
 
-          pcmPlayerRef.current?.stop();
-          micStreamerRef.current?.stop();
+          await pcmPlayerRef.current?.stop();
+          await micStreamerRef.current?.stop();
 
           pcmPlayerRef.current = null;
           micStreamerRef.current = null;
@@ -221,11 +222,11 @@ export const useGeminiLive = ({
 
           setConnectionState(ConnectionState.DISCONNECTED);
         },
-        onerror: (e: ErrorEvent) => {
+        onerror: async (e: ErrorEvent) => {
           console.error("Session error:", e);
 
-          pcmPlayerRef.current?.stop();
-          micStreamerRef.current?.stop();
+          await pcmPlayerRef.current?.stop();
+          await micStreamerRef.current?.stop();
 
           pcmPlayerRef.current = null;
           micStreamerRef.current = null;
@@ -238,12 +239,6 @@ export const useGeminiLive = ({
 
     // Cleanup
     return () => {
-      pcmPlayerRef.current?.stop();
-      micStreamerRef.current?.stop();
-
-      pcmPlayerRef.current = null;
-      micStreamerRef.current = null;
-
       sessionPromiseRef.current?.then((session) => {
         session.close();
       });

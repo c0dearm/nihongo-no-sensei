@@ -84,8 +84,9 @@ export const useGeminiLive = ({
   const sessionPromiseRef = useRef<Promise<Session> | null>(null);
   const micStreamerRef = useRef<MicrophoneStreamer | null>(null);
   const pcmPlayerRef = useRef<PcmPlayer | null>(null);
-  const currentInputRef = useRef("");
-  const currentOutputRef = useRef("");
+  const isTriggerWordTurn = useRef<boolean>(true);
+  const currentInputRef = useRef<string>("");
+  const currentOutputRef = useRef<string>("");
 
   useEffect(() => {
     setConnectionState(ConnectionState.CONNECTING);
@@ -126,9 +127,9 @@ export const useGeminiLive = ({
           });
         },
         onmessage: async (message: LiveServerMessage) => {
-          // Handle Input Transcription
+          // Handle Input Transcription. The trigger word (first turn) is ignored.
           const inputText = message.serverContent?.inputTranscription?.text;
-          if (inputText) {
+          if (inputText && !isTriggerWordTurn.current) {
             currentInputRef.current += inputText;
             setCurrentInput(currentInputRef.current);
           }
@@ -140,7 +141,7 @@ export const useGeminiLive = ({
             setCurrentOutput(currentOutputRef.current);
           }
 
-          // Handle Turn Complete
+          // Handle Turn Complete. The trigger word (first turn) is ignored.
           if (message.serverContent?.turnComplete) {
             const finalInput = currentInputRef.current.trim();
             const finalOutput = currentOutputRef.current.trim();
@@ -148,11 +149,15 @@ export const useGeminiLive = ({
             setMessages((prevMessages) => {
               let newMessages = [...prevMessages];
               if (finalInput) {
-                newMessages.push({
-                  id: `student-${Date.now()}` as ChatMessageId,
-                  sender: "student",
-                  text: finalInput,
-                });
+                if (!isTriggerWordTurn.current) {
+                  newMessages.push({
+                    id: `student-${Date.now()}` as ChatMessageId,
+                    sender: "student",
+                    text: finalInput,
+                  });
+                } else {
+                  isTriggerWordTurn.current = false;
+                }
               }
               if (finalOutput) {
                 newMessages.push({

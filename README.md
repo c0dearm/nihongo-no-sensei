@@ -22,9 +22,7 @@ An interactive AI-powered Japanese speaking partner designed to help you achieve
 This application leverages the power of Google's Gemini API to create a seamless and interactive language-learning experience.
 
 - **Core Technology**: The app is built with **React** and **TypeScript**.
-- **AI Interaction**:
-  - The real-time conversation is handled by **`gemini-2.5-flash-native-audio-preview-09-2025`** using the **Live API**. This enables a low-latency, audio-in/audio-out stream for a fluid speaking experience.
-  - The initial greeting from the teacher is generated using the **`gemini-2.5-flash-preview-tts`** model.
+- **AI Interaction**: The real-time conversation is handled by **`gemini-2.5-flash-native-audio-preview-09-2025`** using the **Live API**. This enables a low-latency, audio-in/audio-out stream for a fluid speaking experience.
 - **Audio Processing**: The browser's **Web Audio API** (`AudioContext`, `AudioWorklet`) is used to capture microphone input, process it into the required PCM format, and play back the AI's audio response without gaps or delays.
 - **State Management**: React's Context API is used to manage global state for user settings and chat history.
 - **Local Persistence**: Your settings and chat history are saved directly in your browser using `localStorage`.

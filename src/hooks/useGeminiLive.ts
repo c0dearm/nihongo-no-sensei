@@ -65,7 +65,7 @@ const getContext = (
   } else {
     const messages = chatSession.messages
       .map((message) => {
-        return `${message.sender}: ${message.text}`
+        return `${message.sender}: ${message.text}`;
       })
       .join("\n");
     return `${context}\nUp to now you have had this conversation with the student:\n${messages}`;
@@ -95,7 +95,10 @@ export const useGeminiLive = ({
 
   useEffect(() => {
     setConnectionState(ConnectionState.CONNECTING);
-    const client = new GoogleGenAI({ apiKey: geminiApiKey, httpOptions: { "apiVersion": "v1alpha" } });
+    const client = new GoogleGenAI({
+      apiKey: geminiApiKey,
+      httpOptions: { apiVersion: "v1alpha" },
+    });
 
     sessionPromiseRef.current = client.live.connect({
       model: "gemini-2.5-flash-native-audio-preview-09-2025",
@@ -104,6 +107,7 @@ export const useGeminiLive = ({
           voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
         },
         systemInstruction: getContext(chatSession, initialInstruction),
+        contextWindowCompression: { slidingWindow: {} },
         responseModalities: [Modality.AUDIO],
         proactivity: { proactiveAudio: true },
         enableAffectiveDialog: true,

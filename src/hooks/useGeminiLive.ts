@@ -93,6 +93,13 @@ export const useGeminiLive = ({
   const currentInputRef = useRef<string>("");
   const currentOutputRef = useRef<string>("");
 
+  // Persist messages to chat history when they change
+  useEffect(() => {
+    if (messages.length > chatSession.messages.length) {
+      updateChatMessages(chatId, messages);
+    }
+  }, [messages, chatId, chatSession.messages.length, updateChatMessages]);
+
   useEffect(() => {
     setConnectionState(ConnectionState.CONNECTING);
     const client = new GoogleGenAI({
@@ -175,7 +182,6 @@ export const useGeminiLive = ({
                   text: finalOutput,
                 });
               }
-              updateChatMessages(chatId, newMessages);
               return newMessages;
             });
 
@@ -246,13 +252,8 @@ export const useGeminiLive = ({
       });
       sessionPromiseRef.current = null;
     };
-  }, [
-    geminiApiKey,
-    initialInstruction,
-    chatId,
-    updateChatMessages,
-    chatSession,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geminiApiKey, initialInstruction, chatId]);
 
   return { messages, connectionState, currentInput, currentOutput };
 };

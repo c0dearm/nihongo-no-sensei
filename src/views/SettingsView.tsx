@@ -95,8 +95,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onClose }) => {
               Initial Instruction
             </label>
             <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-3">
-              Submit extra context to the teacher when starting new
-              conversations.
+              Provide extra context to the teacher.
             </p>
             <input
               id="initialInstruction"

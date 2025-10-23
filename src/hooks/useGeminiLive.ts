@@ -165,15 +165,11 @@ export const useGeminiLive = ({
             setMessages((prevMessages) => {
               let newMessages = [...prevMessages];
               if (finalInput) {
-                if (!isTriggerWordTurn.current) {
-                  newMessages.push({
-                    id: `student-${Date.now()}` as ChatMessageId,
-                    sender: "student",
-                    text: finalInput,
-                  });
-                } else {
-                  isTriggerWordTurn.current = false;
-                }
+                newMessages.push({
+                  id: `student-${Date.now()}` as ChatMessageId,
+                  sender: "student",
+                  text: finalInput,
+                });
               }
               if (finalOutput) {
                 newMessages.push({
@@ -185,7 +181,8 @@ export const useGeminiLive = ({
               return newMessages;
             });
 
-            // Restart partial inputs
+            // Restart partial inputs and disable first turn flag
+            isTriggerWordTurn.current = false;
             currentInputRef.current = "";
             currentOutputRef.current = "";
             setCurrentInput(currentInputRef.current);

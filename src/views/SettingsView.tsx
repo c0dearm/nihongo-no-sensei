@@ -95,7 +95,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onClose }) => {
               Initial Instruction
             </label>
             <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-3">
-              When set the conversation will start automatically, otherwise you need to speak first.
+              When set the conversation will start automatically, otherwise you
+              need to speak first.
             </p>
             <input
               id="initialInstruction"

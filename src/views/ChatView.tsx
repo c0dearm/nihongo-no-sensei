@@ -34,7 +34,6 @@ const ChatView: React.FC<ChatViewProps> = ({
 
   const [isBlurred, setIsBlurred] = useState(defaultBlur);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const isNewChat = useRef((chatSession?.messages.length ?? 0) === 0);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -128,7 +127,7 @@ const ChatView: React.FC<ChatViewProps> = ({
       </div>
       <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto">
         {messages.map(renderMessage)}
-        {currentInput && !isNewChat.current && (
+        {currentInput && messages.length > 0 && (
           <div className="flex justify-end mb-4">
             <div className="max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl bg-primary text-white rounded-br-none italic">
               <span

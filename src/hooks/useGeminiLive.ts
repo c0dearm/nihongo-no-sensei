@@ -97,6 +97,8 @@ export const useGeminiLive = ({
         },
         systemInstruction: getContext(chatSession, initialInstruction),
         responseModalities: [Modality.AUDIO],
+        proactivity: { proactiveAudio: true },
+        enableAffectiveDialog: true,
         inputAudioTranscription: {},
         outputAudioTranscription: {},
       },

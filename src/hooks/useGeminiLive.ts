@@ -63,7 +63,12 @@ const getContext = (
   if (chatSession.messages.length === 0) {
     return `${context}\n${initialInstruction}`;
   } else {
-    return `${context}\nUp to now you have had this conversation with the student:\n${chatSession.messages}`;
+    const messages = chatSession.messages
+      .map((message) => {
+        return `${message.sender}: ${message.text}`
+      })
+      .join("\n");
+    return `${context}\nUp to now you have had this conversation with the student:\n${messages}`;
   }
 };
 
